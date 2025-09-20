@@ -3,7 +3,8 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import Papa from "papaparse";
 import { storage } from "./storage";
-import { enhancedInsertSalesDataSchema } from "@shared/schema";
+import { enhancedInsertSalesDataSchema, insertForecastSchema } from "@shared/schema";
+import { generateForecasts, ForecastResult } from "./forecasting";
 import { z } from "zod";
 
 // Configure multer for file uploads
@@ -344,6 +345,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Get sales summary error:', error);
       res.status(500).json({ error: 'Failed to generate sales summary' });
+    }
+  });
+
+  // Request validation schema
+  const forecastRequestSchema = z.object({
+    forecastDays: z.number().min(1).max(30).default(7),
+    bufferPercentage: z.number().min(0).max(50).default(20)
+  });
+
+  // Forecast generation endpoint
+  app.post('/api/forecasts/generate', async (req, res) => {
+    try {
+      // Validate request body
+      const { forecastDays, bufferPercentage } = forecastRequestSchema.parse(req.body);
+
+      // Get recent sales data
+      const salesData = await storage.getSalesData(1000); // Get last 1000 records
+      
+      if (salesData.length === 0) {
+        return res.status(400).json({ 
+          error: 'No sales data available for forecasting',
+          message: 'Please upload sales data first before generating forecasts'
+        });
+      }
+
+      // Generate AI forecasts
+      const forecastResults = await generateForecasts({
+        salesData,
+        forecastDays,
+        bufferPercentage
+      });
+
+      // Convert forecast results to database format with validation
+      const forecastsToSave = [];
+      for (const result of forecastResults) {
+        try {
+          const forecastData = {
+            forecastDate: new Date(Date.now() + forecastDays * 24 * 60 * 60 * 1000),
+            item: result.item,
+            predictedQuantity: result.predictedQuantity,
+            confidence: Math.round(result.confidence * 100),
+            currentStock: null, // Unknown inventory
+            predictedSavingsInCents: Math.min(result.estimatedSavings, 100000), // Cap at $1000
+            basedOnData: { 
+              dataPoints: salesData.filter(s => s.item === result.item).length,
+              forecastPeriod: forecastDays,
+              reasoning: result.reasoning,
+              recommendedOrderQuantity: result.recommendedOrderQuantity,
+              forecastType: result.forecastType
+            }
+          };
+          
+          // Validate with schema
+          const validatedForecast = insertForecastSchema.parse(forecastData);
+          forecastsToSave.push(validatedForecast);
+        } catch (validationError) {
+          console.warn(`Skipping invalid forecast for ${result.item}:`, validationError);
+        }
+      }
+
+      // Save forecasts to storage
+      const savedForecasts = [];
+      for (const forecast of forecastsToSave) {
+        const saved = await storage.createForecast(forecast);
+        savedForecasts.push(saved);
+      }
+
+      res.json({
+        success: true,
+        message: `Generated ${savedForecasts.length} forecasts`,
+        forecasts: savedForecasts,
+        forecastPeriod: forecastDays,
+        dataPointsUsed: salesData.length
+      });
+
+    } catch (error) {
+      console.error('Forecast generation error:', error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          error: 'Invalid request parameters',
+          details: error.issues
+        });
+      }
+      
+      res.status(500).json({ 
+        error: 'Failed to generate forecasts',
+        message: error instanceof Error ? error.message : 'Unknown error occurred'
+      });
+    }
+  });
+
+  // Get forecasts endpoint
+  app.get('/api/forecasts', async (req, res) => {
+    try {
+      const { limit = 50 } = req.query;
+      const forecasts = await storage.getForecasts(parseInt(limit as string));
+      
+      res.json({
+        success: true,
+        forecasts,
+        count: forecasts.length
+      });
+    } catch (error) {
+      console.error('Get forecasts error:', error);
+      res.status(500).json({ error: 'Failed to retrieve forecasts' });
     }
   });
 
