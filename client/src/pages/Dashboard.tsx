@@ -43,14 +43,23 @@ export default function Dashboard() {
   const [hasUploadedFile, setHasUploadedFile] = useState(false);
   const [showForecast, setShowForecast] = useState(false);
   const [showOrder, setShowOrder] = useState(false);
+  const [uploadResult, setUploadResult] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleFileUpload = (file: File) => {
-    console.log('File uploaded:', file.name);
+  const handleUploadStart = () => {
+    setIsProcessing(true);
+  };
+
+  const handleFileUpload = (result: any) => {
+    console.log('Upload completed:', result);
+    setUploadResult(result);
     setHasUploadedFile(true);
-    // Simulate processing time
+    setIsProcessing(false);
+    
+    // Simulate AI processing time before showing forecast
     setTimeout(() => {
       setShowForecast(true);
-    }, 1000);
+    }, 2000);
   };
 
   const handleGenerateOrder = () => {
@@ -98,7 +107,47 @@ export default function Dashboard() {
             <h2 className="text-lg font-semibold mb-3 text-foreground">
               Start by uploading your sales data
             </h2>
-            <UploadArea onFileUpload={handleFileUpload} />
+            <UploadArea 
+              onFileUpload={handleFileUpload} 
+              onUploadStart={handleUploadStart}
+            />
+          </div>
+        )}
+
+        {/* Processing Status */}
+        {isProcessing && (
+          <div>
+            <h2 className="text-lg font-semibold mb-3 text-foreground">
+              Processing your data...
+            </h2>
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Analyzing sales patterns with AI</p>
+            </div>
+          </div>
+        )}
+
+        {/* Upload Summary */}
+        {hasUploadedFile && uploadResult && (
+          <div>
+            <h2 className="text-lg font-semibold mb-3 text-foreground">
+              Data Upload Summary
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              <DashboardCard
+                title="Records Processed"
+                value={uploadResult.validRows?.toString() || "0"}
+                subtitle={`from ${uploadResult.totalRows || 0} total rows`}
+                trend={uploadResult.errors?.length > 0 ? -((uploadResult.errors.length / uploadResult.totalRows) * 100) : 0}
+              />
+              <DashboardCard
+                title="Data Quality"
+                value={`${Math.round(((uploadResult.validRows || 0) / (uploadResult.totalRows || 1)) * 100)}%`}
+                subtitle="validation success rate"
+                trend={uploadResult.errors?.length === 0 ? 5 : 0}
+                variant={uploadResult.errors?.length === 0 ? "accent" : "default"}
+              />
+            </div>
           </div>
         )}
 
