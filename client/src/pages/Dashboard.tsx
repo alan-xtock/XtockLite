@@ -197,7 +197,7 @@ export default function Dashboard() {
             <ForecastCard
               date="Next 7 Days"
               items={forecasts}
-              totalSavings={forecasts.reduce((sum: number, item: any) => sum + (item.estimatedSavings || 0), 0) / 100 || 0}
+              totalSavings={(forecasts.reduce((sum: number, item: any) => sum + (item.predictedSavingsInCents || 0), 0) / 100) || 0}
               onGenerateOrder={handleGenerateOrder}
             />
           </div>

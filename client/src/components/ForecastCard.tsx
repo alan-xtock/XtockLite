@@ -5,10 +5,13 @@ import { TrendingUp, Brain, Calendar } from "lucide-react";
 
 interface ForecastItem {
   item: string;
-  currentStock: number;
-  predicted: number;
+  currentStock: number | null;
+  predictedQuantity: number;
   confidence: number;
-  savings: number;
+  predictedSavingsInCents: number;
+  basedOnData?: {
+    recommendedOrderQuantity: number;
+  };
 }
 
 interface ForecastCardProps {
@@ -51,7 +54,7 @@ export default function ForecastCard({
               <div className="flex-1">
                 <div className="font-medium text-foreground">{item.item}</div>
                 <div className="text-xs text-muted-foreground">
-                  Current: {item.currentStock} | Predicted: {item.predicted}
+                  Current: {item.currentStock || 'Unknown'} | Predicted: {item.predictedQuantity}
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -59,7 +62,7 @@ export default function ForecastCard({
                   {item.confidence}% confident
                 </Badge>
                 <span className="text-sm font-medium text-accent">
-                  +${item.savings}
+                  +${(item.predictedSavingsInCents / 100).toFixed(2)}
                 </span>
               </div>
             </div>
