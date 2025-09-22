@@ -4,53 +4,61 @@ import UploadArea from "@/components/UploadArea";
 import ForecastCard from "@/components/ForecastCard";
 import OrderCard from "@/components/OrderCard";
 import StatsCard from "@/components/StatsCard";
-import TryNowDemo from "@/components/TryNowDemo";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Sparkles } from "lucide-react";
-
-//todo: remove mock functionality - replace with real data from backend
-const mockForecastItems = [
-  {
-    item: "Organic Tomatoes",
-    currentStock: 45,
-    predicted: 60,
-    confidence: 94,
-    savings: 23.50
-  },
-  {
-    item: "Fresh Lettuce", 
-    currentStock: 30,
-    predicted: 25,
-    confidence: 87,
-    savings: 15.75
-  },
-  {
-    item: "Red Peppers",
-    currentStock: 20, 
-    predicted: 35,
-    confidence: 91,
-    savings: 18.25
-  }
-];
-
-//todo: remove mock functionality - replace with real data from backend
-const mockOrderItems = [
-  { item: "Organic Tomatoes", quantity: 60, unit: "lbs", price: 89.40 },
-  { item: "Fresh Lettuce", quantity: 25, unit: "heads", price: 37.50 },
-  { item: "Red Peppers", quantity: 35, unit: "lbs", price: 52.25 }
-];
+import { RefreshCw } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
   const [hasUploadedFile, setHasUploadedFile] = useState(false);
   const [showForecast, setShowForecast] = useState(false);
   const [showOrder, setShowOrder] = useState(false);
   const [uploadResult, setUploadResult] = useState<any>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isDemoMode, setIsDemoMode] = useState(false);
-  const [currentDemoStep, setCurrentDemoStep] = useState(1);
+  const [isGeneratingForecast, setIsGeneratingForecast] = useState(false);
+  const { toast } = useToast();
+
+  // Fetch real sales data
+  const { data: salesData } = useQuery({
+    queryKey: ['/api/sales-data'],
+    enabled: hasUploadedFile
+  });
+
+  // Fetch real forecasts
+  const { data: forecasts, isLoading: forecastsLoading } = useQuery({
+    queryKey: ['/api/forecasts'],
+    enabled: showForecast
+  });
+
+  // Generate forecasts mutation
+  const generateForecastMutation = useMutation({
+    mutationFn: async (params: { forecastDays: number; bufferPercentage: number }) => {
+      const response = await fetch('/api/forecasts/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params)
+      });
+      if (!response.ok) throw new Error('Failed to generate forecasts');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/forecasts'] });
+      setShowForecast(true);
+      setIsGeneratingForecast(false);
+      toast({ title: "Forecasts generated successfully" });
+    },
+    onError: (error: any) => {
+      setIsGeneratingForecast(false);
+      toast({ 
+        title: "Failed to generate forecasts", 
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
 
   const handleUploadStart = () => {
-    setIsProcessing(true);
+    setIsGeneratingForecast(true);
   };
 
   const handleFileUpload = (result: any) => {
@@ -58,76 +66,23 @@ export default function Dashboard() {
     setUploadResult(result);
     setHasUploadedFile(true);
     
-    // Progress demo to step 2 if in demo mode and keep processing active
-    if (isDemoMode) {
-      setCurrentDemoStep(2);
-      // Auto-scroll to processing section
-      setTimeout(() => {
-        const processingSection = document.querySelector('[data-testid="processing-section"]');
-        if (processingSection) {
-          processingSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 500);
-    }
-    
-    // Simulate AI processing time before showing forecast
+    // Auto-generate forecasts after successful upload
     setTimeout(() => {
-      setIsProcessing(false); // Stop processing animation
-      setShowForecast(true);
-      // Progress demo to step 3 if in demo mode
-      if (isDemoMode) {
-        setCurrentDemoStep(3);
-        // Auto-scroll to forecast section
-        setTimeout(() => {
-          const forecastSection = document.querySelector('[data-testid="forecast-section"]');
-          if (forecastSection) {
-            forecastSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 500);
-      }
-    }, 2000);
+      handleGenerateForecast();
+    }, 1000);
+  };
+
+  const handleGenerateForecast = () => {
+    setIsGeneratingForecast(true);
+    generateForecastMutation.mutate({
+      forecastDays: 7,
+      bufferPercentage: 20
+    });
   };
 
   const handleGenerateOrder = () => {
     console.log('Generate order triggered');
     setShowOrder(true);
-    
-    // Progress demo to step 4 if in demo mode
-    if (isDemoMode) {
-      setCurrentDemoStep(4);
-      // Auto-scroll to order section
-      setTimeout(() => {
-        const orderSection = document.querySelector('[data-testid="order-section"]');
-        if (orderSection) {
-          orderSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 500);
-    }
-  };
-
-  const handleStartDemo = () => {
-    console.log('Demo started');
-    setIsDemoMode(true);
-    setCurrentDemoStep(1);
-    // Scroll to upload area
-    setTimeout(() => {
-      const uploadSection = document.querySelector('[data-testid="upload-section"]');
-      if (uploadSection) {
-        uploadSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
-  };
-
-  const handleExitDemo = () => {
-    console.log('Demo exited');
-    setIsDemoMode(false);
-    setCurrentDemoStep(1);
-    // Reset demo state
-    setHasUploadedFile(false);
-    setShowForecast(false);
-    setShowOrder(false);
-    setUploadResult(null);
-    setIsProcessing(false);
   };
 
   return (
@@ -136,7 +91,7 @@ export default function Dashboard() {
       <div className="sticky top-0 z-10 bg-background border-b border-border p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-primary">XtockLite</h1>
+            <h1 className="text-2xl font-bold text-primary" data-testid="text-app-title">XtockLite</h1>
             <p className="text-sm text-muted-foreground">AI Produce Ordering</p>
           </div>
           <Button variant="outline" size="icon" data-testid="button-refresh">
@@ -147,57 +102,48 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <div className="p-4 space-y-6">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-2 gap-4">
-          <DashboardCard
-            title="Daily Savings"
-            value="$247.50"
-            subtitle="10.2% cost reduction"
-            trend={10.2}
-            variant="accent"
-          />
-          <DashboardCard
-            title="Monthly Total"
-            value="$6,892"
-            subtitle="vs $7,650 last month"
-            trend={-9.9}
-          />
-        </div>
-
-        {/* Try Now Demo - Show when no file uploaded */}
-        {!hasUploadedFile && !isDemoMode && (
-          <div className="text-center py-8 space-y-6">
-            <div className="space-y-3">
-              <div className="flex justify-center">
-                <Sparkles className="w-12 h-12 text-primary" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground">
-                Ready to reduce your produce costs by 10%?
-              </h2>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                Discover how AI can transform your purchasing decisions and save money every day.
-              </p>
-            </div>
-            <TryNowDemo 
-              onStartDemo={handleStartDemo} 
-              isDemoActive={isDemoMode}
-              currentDemoStep={currentDemoStep}
-              onExitDemo={handleExitDemo}
+        {/* Stats Overview - Only show when we have real data */}
+        {hasUploadedFile && salesData && (
+          <div className="grid grid-cols-2 gap-4">
+            <DashboardCard
+              title="Items Tracked"
+              value={Array.isArray(salesData) ? salesData.length.toString() : '0'}
+              subtitle="Sales records uploaded"
+              trend={0}
+              variant="accent"
+            />
+            <DashboardCard
+              title="Ready for AI"
+              value="✓"
+              subtitle="Data processed successfully"
+              trend={0}
             />
           </div>
         )}
 
-        {/* Upload Section */}
-        {(!hasUploadedFile && isDemoMode) && (
-          <div data-testid="upload-section" className={isDemoMode && currentDemoStep === 1 ? "ring-2 ring-primary ring-offset-2 rounded-lg p-4" : ""}>
-            <h2 className="text-lg font-semibold mb-3 text-foreground">
-              {isDemoMode ? "Step 1: Upload Your Sales Data" : "Start by uploading your sales data"}
-            </h2>
-            {isDemoMode && (
-              <p className="text-sm text-muted-foreground mb-4">
-                Upload a CSV file with your sales history from the last 30 days. Include columns for date, item, quantity, unit, and price.
+        {/* Welcome Section - Show when no file uploaded */}
+        {!hasUploadedFile && (
+          <div className="text-center py-8 space-y-6">
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold text-foreground">
+                Welcome to XtockLite
+              </h2>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Upload your sales data to start reducing produce costs with AI-powered forecasting.
               </p>
-            )}
+            </div>
+          </div>
+        )}
+
+        {/* Upload Section */}
+        {!hasUploadedFile && (
+          <div data-testid="upload-section">
+            <h2 className="text-lg font-semibold mb-3 text-foreground">
+              Upload Your Sales Data
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Upload a CSV file with your sales history. Include columns for date, item, quantity, unit, and price.
+            </p>
             <UploadArea 
               onFileUpload={handleFileUpload} 
               onUploadStart={handleUploadStart}
@@ -206,16 +152,11 @@ export default function Dashboard() {
         )}
 
         {/* Processing Status */}
-        {isProcessing && (
-          <div data-testid="processing-section" className={isDemoMode && currentDemoStep === 2 ? "ring-2 ring-accent ring-offset-2 rounded-lg p-4" : ""}>
+        {isGeneratingForecast && (
+          <div data-testid="processing-section">
             <h2 className="text-lg font-semibold mb-3 text-foreground">
-              {isDemoMode && currentDemoStep === 2 ? "Step 2: AI Analysis in Progress" : "Processing your data..."}
+              Processing your data...
             </h2>
-            {isDemoMode && currentDemoStep === 2 && (
-              <p className="text-sm text-muted-foreground mb-4">
-                Our AI is analyzing your sales patterns, identifying trends, and calculating optimal order quantities.
-              </p>
-            )}
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
               <p className="text-muted-foreground">Analyzing sales patterns with AI</p>
@@ -248,86 +189,61 @@ export default function Dashboard() {
         )}
 
         {/* Forecast Section */}
-        {showForecast && (
-          <div data-testid="forecast-section" className={isDemoMode && currentDemoStep === 3 ? "ring-2 ring-accent ring-offset-2 rounded-lg p-4" : ""}>
+        {showForecast && Array.isArray(forecasts) && (
+          <div data-testid="forecast-section">
             <h2 className="text-lg font-semibold mb-3 text-foreground">
-              {isDemoMode && currentDemoStep === 3 ? "Step 3: Review AI Forecasts" : "AI Forecast Results"}
+              AI Forecast Results
             </h2>
-            {isDemoMode && currentDemoStep === 3 && (
-              <p className="text-sm text-muted-foreground mb-4">
-                Review the AI predictions showing demand forecasts, confidence scores, and potential savings. Click "Generate Order" when ready.
-              </p>
-            )}
             <ForecastCard
-              date="Tomorrow"
-              items={mockForecastItems}
-              totalSavings={57.50}
+              date="Next 7 Days"
+              items={forecasts}
+              totalSavings={forecasts.reduce((sum: number, item: any) => sum + (item.estimatedSavings || 0), 0) / 100 || 0}
               onGenerateOrder={handleGenerateOrder}
             />
           </div>
         )}
 
         {/* Order Section */}
-        {showOrder && (
-          <div data-testid="order-section" className={isDemoMode && currentDemoStep === 4 ? "ring-2 ring-accent ring-offset-2 rounded-lg p-4" : ""}>
+        {showOrder && Array.isArray(forecasts) && (
+          <div data-testid="order-section">
             <h2 className="text-lg font-semibold mb-3 text-foreground">
-              {isDemoMode && currentDemoStep === 4 ? "Step 4: Approve & Send Order" : "Generated Purchase Order"}
+              Generated Purchase Order
             </h2>
-            {isDemoMode && currentDemoStep === 4 && (
-              <p className="text-sm text-muted-foreground mb-4">
-                Review the automatically generated purchase order. Approve it and send directly to your supplier via WhatsApp.
-              </p>
-            )}
             <OrderCard
-              orderId="PO-2024-001"
-              supplier="Green Valley Farms"
+              orderId={`PO-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`}
+              supplier="Your Supplier"
               status="draft"
-              items={mockOrderItems}
-              total={179.15}
+              items={forecasts.map((forecast: any) => ({
+                item: forecast.item,
+                quantity: forecast.recommendedOrderQuantity,
+                unit: "units",
+                price: forecast.recommendedOrderQuantity * 1.00 // Default $1 per unit
+              }))}
+              total={forecasts.reduce((sum: number, forecast: any) => sum + (forecast.recommendedOrderQuantity * 1.00), 0)}
               onApprove={() => {
                 console.log('Order approved');
-                if (isDemoMode) {
-                  // Demo completed successfully
-                  setTimeout(() => {
-                    handleExitDemo();
-                  }, 2000);
-                }
+                toast({ title: "Order approved successfully" });
               }}
               onSend={() => {
                 console.log('Order sent via WhatsApp');
-                if (isDemoMode) {
-                  // Demo completed successfully
-                  setTimeout(() => {
-                    handleExitDemo();
-                  }, 2000);
-                }
+                toast({ title: "Order sent to supplier via WhatsApp" });
               }}
             />
           </div>
         )}
 
-        {/* Analytics Section */}
-        <div>
-          <h2 className="text-lg font-semibold mb-3 text-foreground">
-            Performance Analytics
-          </h2>
-          <div className="grid grid-cols-2 gap-4">
-            <StatsCard
-              title="Cost Reduction"
-              value="10.2%"
-              change={2.4}
-              period="last month"
-              description="Exceeding target"
-            />
-            <StatsCard
-              title="Forecast Accuracy"
-              value="94.3%"
-              change={-1.2}
-              period="last month"
-              description="AI confidence"
-            />
+        {/* Generate Forecast Button */}
+        {hasUploadedFile && !showForecast && !isGeneratingForecast && (
+          <div className="text-center">
+            <Button 
+              onClick={handleGenerateForecast}
+              size="lg"
+              data-testid="button-generate-forecast"
+            >
+              Generate AI Forecast
+            </Button>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
