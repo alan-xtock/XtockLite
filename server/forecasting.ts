@@ -52,25 +52,27 @@ function generateStatisticalForecasts(request: ForecastRequest): ForecastResult[
     const sortedDates = Array.from(dailyTotals.keys()).sort();
     const last30Days = sortedDates.slice(-30);
     
-    // Only predict if we have at least 30 unique days of data
-    if (last30Days.length < 30) {
+    // For 1-day predictions, use available data (minimum 3 days for basic trend analysis)
+    if (last30Days.length < 3) {
+      console.log(`Skipping ${item}: only ${last30Days.length} days of data, need at least 3`);
       continue;
     }
     
-    // Split into 4 blocks with correct weights (oldest → newest)
-    const block1 = last30Days.slice(0, 7);   // Days 1-7 (oldest) → 50% weight
-    const block2 = last30Days.slice(7, 14);  // Days 8-14 → 30% weight
-    const block3 = last30Days.slice(14, 21); // Days 15-21 → 10% weight
-    const block4 = last30Days.slice(21, 30); // Days 22-30 (most recent) → 10% weight
+    // For 1-day prediction: Use simple weighted average of available data
+    // Give more weight to recent data for next-day prediction
+    const availableDays = last30Days.length;
+    let weightedSum = 0;
+    let totalWeight = 0;
     
-    // Calculate average quantity for each block
-    const avg1 = block1.reduce((sum, dateKey) => sum + (dailyTotals.get(dateKey) || 0), 0) / block1.length;
-    const avg2 = block2.reduce((sum, dateKey) => sum + (dailyTotals.get(dateKey) || 0), 0) / block2.length;
-    const avg3 = block3.reduce((sum, dateKey) => sum + (dailyTotals.get(dateKey) || 0), 0) / block3.length;
-    const avg4 = block4.reduce((sum, dateKey) => sum + (dailyTotals.get(dateKey) || 0), 0) / block4.length;
+    last30Days.forEach((dateKey, index) => {
+      const quantity = dailyTotals.get(dateKey) || 0;
+      // Linear weighting: more recent days get higher weight
+      const weight = (index + 1) / availableDays;
+      weightedSum += quantity * weight;
+      totalWeight += weight;
+    });
     
-    // Apply weights and sum: 50% (oldest) + 30% + 10% + 10% (newest)
-    const weightedAverage = (avg1 * 0.5) + (avg2 * 0.3) + (avg3 * 0.1) + (avg4 * 0.1);
+    const weightedAverage = totalWeight > 0 ? weightedSum / totalWeight : 0;
     
     // Apply weather adjustment
     let weatherMultiplier = 1.0;
@@ -93,6 +95,8 @@ function generateStatisticalForecasts(request: ForecastRequest): ForecastResult[
  */
 export async function generateForecasts(request: ForecastRequest): Promise<ForecastResult[]> {
   const { salesData, weather = "cloudy" } = request;
+  
+  console.log(`Generating forecasts for ${salesData.length} sales records with weather: ${weather}`);
   
   if (salesData.length === 0) {
     throw new Error("No sales data provided for forecasting");

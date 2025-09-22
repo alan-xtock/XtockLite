@@ -32,10 +32,10 @@ export default function Dashboard() {
     enabled: showForecast
   });
 
-  // Generate forecasts mutation
+  // Generate forecasts mutation - use TRUE 1-day endpoint
   const generateForecastMutation = useMutation({
     mutationFn: async (params: { weather?: "sunny" | "cloudy" | "rainy" }) => {
-      const response = await fetch('/api/forecasts/generate', {
+      const response = await fetch('/api/forecasts/generate-1day', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params)

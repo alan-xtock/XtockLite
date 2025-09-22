@@ -364,7 +364,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     weather: z.enum(["sunny", "cloudy", "rainy"]).optional().default("cloudy")
   });
 
-  // Forecast generation endpoint
+  // TRUE 1-day forecast generation endpoint (bypasses integrations)
+  app.post('/api/forecasts/generate-1day', async (req, res) => {
+    try {
+      console.log('1-day forecast endpoint called with:', req.body);
+      const { weather = "cloudy" } = req.body;
+      
+      // Get recent sales data
+      const salesData = await storage.getSalesData(1000);
+      console.log(`Found ${salesData.length} sales records`);
+      
+      if (salesData.length === 0) {
+        return res.status(400).json({ 
+          error: 'No sales data available',
+          message: 'Please upload sales data first'
+        });
+      }
+
+      // Generate simple 1-day predictions
+      const itemGroups = salesData.reduce((groups: any, sale: any) => {
+        if (!groups[sale.item]) groups[sale.item] = [];
+        groups[sale.item].push(sale);
+        return groups;
+      }, {});
+
+      console.log(`Grouped into ${Object.keys(itemGroups).length} items`);
+      
+      const forecasts = [];
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      
+      for (const [item, sales] of Object.entries(itemGroups as Record<string, any[]>)) {
+        if (sales.length === 0) continue;
+        
+        // Simple average of recent sales  
+        const avgQuantity = sales.reduce((sum, s) => sum + s.quantity, 0) / sales.length;
+        
+        // Apply weather adjustment
+        let weatherMultiplier = 1.0;
+        if (weather === "sunny") weatherMultiplier = 1.2;
+        else if (weather === "rainy") weatherMultiplier = 0.8;
+        
+        const predictedQuantity = Math.round(avgQuantity * weatherMultiplier);
+        
+        // Create forecast compatible with storage schema
+        const forecastForStorage = {
+          forecastDate: tomorrow,
+          item,
+          predictedQuantity,
+          confidence: 75,
+          currentStock: null,
+          predictedSavingsInCents: 0,
+          basedOnData: {
+            dataPoints: sales.length,
+            forecastPeriod: 1,
+            reasoning: `1-day prediction for tomorrow: ${predictedQuantity} units (weather: ${weather})`,
+            recommendedOrderQuantity: predictedQuantity,
+            forecastType: "daily",
+            weather: weather
+          }
+        };
+        
+        // Save to storage (this adds id and createdAt)
+        const savedForecast = await storage.createForecast(forecastForStorage);
+        forecasts.push(savedForecast);
+      }
+
+      console.log(`Generated ${forecasts.length} forecasts`);
+      
+      res.json({
+        success: true,
+        message: `Generated ${forecasts.length} TRUE 1-day forecasts`,
+        forecasts: forecasts,
+        forecastPeriod: 1,
+        forecastType: "daily",
+        weather: weather,
+        dataPointsUsed: salesData.length
+      });
+
+    } catch (error) {
+      console.error('1-day forecast error:', error);
+      res.status(500).json({ 
+        error: 'Failed to generate 1-day forecasts',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Original endpoint (may be overridden by integration)
   app.post('/api/forecasts/generate', async (req, res) => {
     try {
       // Validate request body
@@ -399,16 +485,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             predictedSavingsInCents: 0, // No savings calculation in simplified system
             basedOnData: { 
               dataPoints: salesData.filter(s => s.item === result.item).length,
-              forecastPeriod: 1, // 1-day prediction
-              reasoning: `Next-day prediction: ${result.predictedQuantity} units`,
+              forecastPeriod: 1, // FORCE 1-day prediction
+              reasoning: `1-day prediction for tomorrow: ${result.predictedQuantity} units (weather: ${weather})`,
               recommendedOrderQuantity: result.predictedQuantity,
-              forecastType: "daily" as const,
+              forecastType: "daily" as const, // FORCE daily type
               weather: weather
             }
           };
           
+          console.log('About to save forecast data:', JSON.stringify(forecastData, null, 2));
+          
           // Validate with schema
           const validatedForecast = insertForecastSchema.parse(forecastData);
+          console.log('Validated forecast:', JSON.stringify(validatedForecast, null, 2));
           forecastsToSave.push(validatedForecast);
         } catch (validationError) {
           console.warn(`Skipping invalid forecast for ${result.item}:`, validationError);
@@ -418,7 +507,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Save forecasts to storage
       const savedForecasts = [];
       for (const forecast of forecastsToSave) {
+        console.log('Saving forecast to storage:', JSON.stringify(forecast, null, 2));
         const saved = await storage.createForecast(forecast);
+        console.log('Saved forecast from storage:', JSON.stringify(saved, null, 2));
         savedForecasts.push(saved);
       }
 
@@ -426,7 +517,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         message: `Generated ${savedForecasts.length} next-day forecasts`,
         forecasts: savedForecasts,
-        forecastPeriod: 1, // 1-day predictions
+        forecastPeriod: 1, // 1-day predictions  
+        forecastType: "daily", // Override any integration values
         weather: weather,
         dataPointsUsed: salesData.length
       });
