@@ -51,8 +51,8 @@ const csvColumnSchema = z.object({
   date: z.string().pipe(z.coerce.date().refine(d => !isNaN(d.getTime()), "Invalid date format")),
   item: z.string().min(1, "Item name is required"),
   quantity: z.string().transform(parseQuantity),
-  unit: z.string().min(1, "Unit is required"),
-  price: z.string().transform(parsePrice),
+  unit: z.string().optional().default("units"), // Default unit if not provided
+  price: z.string().optional().default("1.00").transform(parsePrice), // Default $1.00 if no price
   supplier: z.string().optional(),
   category: z.string().optional(),
 });
@@ -65,15 +65,15 @@ function parseCsvRow(row: any): { data: any; fieldMappings: Record<string, strin
   for (const [key, value] of Object.entries(row)) {
     const lowerKey = key.toLowerCase().trim();
     
-    if (lowerKey.includes('date')) {
+    if (lowerKey.includes('date') || lowerKey.includes('timestamp')) {
       normalizedRow.date = value;
       fieldMappings.date = key;
     } else if (lowerKey.includes('supplier') || lowerKey.includes('vendor')) {
       // Check supplier/vendor first to avoid "Supplier Name" being mapped as item
       normalizedRow.supplier = value;
       fieldMappings.supplier = key;
-    } else if (lowerKey.includes('item') || lowerKey.includes('product') || (lowerKey === 'name' || lowerKey.endsWith(' name'))) {
-      // More specific name matching to avoid conflicts
+    } else if (lowerKey.includes('item') || lowerKey.includes('product') || lowerKey.includes('category') || (lowerKey === 'name' || lowerKey.endsWith(' name'))) {
+      // More specific name matching to avoid conflicts, including item_category
       normalizedRow.item = value;
       fieldMappings.item = key;
     } else if (lowerKey.includes('quantity') || lowerKey.includes('qty')) {
@@ -97,13 +97,24 @@ function parseCsvRow(row: any): { data: any; fieldMappings: Record<string, strin
 
 function validateRequiredFields(data: any, fieldMappings: Record<string, string>): string[] {
   const errors: string[] = [];
-  const required = ['date', 'item', 'quantity', 'unit', 'price'];
+  const required = ['date', 'item', 'quantity'];
+  const optional = ['unit', 'price'];
   
   for (const field of required) {
     if (!data[field]) {
-      const suggestion = field === 'quantity' ? 'qty/quantity' : field === 'price' ? 'price/cost/amount' : field;
+      const suggestion = field === 'quantity' ? 'qty/quantity' : field === 'item' ? 'item/product/category' : field === 'date' ? 'date/timestamp' : field;
       errors.push(`Missing required field '${field}' (expected header: ${suggestion})`);
     }
+  }
+  
+  // Add default values for missing optional fields
+  if (!data.unit) {
+    data.unit = "units";
+    console.log("No unit column found - using default 'units'");
+  }
+  if (!data.price) {
+    data.price = "1.00";
+    console.log("No price column found - using default $1.00 per unit");
   }
   
   return errors;
