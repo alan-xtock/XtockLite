@@ -233,14 +233,15 @@ export default function Dashboard() {
         )}
 
         {/* Generate Forecast Button */}
-        {hasUploadedFile && !showForecast && !isGeneratingForecast && (
+        {hasUploadedFile && !isGeneratingForecast && (
           <div className="text-center">
             <Button 
               onClick={handleGenerateForecast}
               size="lg"
               data-testid="button-generate-forecast"
+              variant={showForecast ? "outline" : "default"}
             >
-              Generate AI Forecast
+              {showForecast ? "Regenerate Forecast" : "Generate AI Forecast"}
             </Button>
           </div>
         )}
