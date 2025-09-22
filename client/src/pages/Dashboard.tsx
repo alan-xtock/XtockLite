@@ -4,8 +4,9 @@ import UploadArea from "@/components/UploadArea";
 import ForecastCard from "@/components/ForecastCard";
 import OrderCard from "@/components/OrderCard";
 import StatsCard from "@/components/StatsCard";
+import TryNowDemo from "@/components/TryNowDemo";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Sparkles } from "lucide-react";
 
 //todo: remove mock functionality - replace with real data from backend
 const mockForecastItems = [
@@ -45,6 +46,8 @@ export default function Dashboard() {
   const [showOrder, setShowOrder] = useState(false);
   const [uploadResult, setUploadResult] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [currentDemoStep, setCurrentDemoStep] = useState(1);
 
   const handleUploadStart = () => {
     setIsProcessing(true);
@@ -54,17 +57,77 @@ export default function Dashboard() {
     console.log('Upload completed:', result);
     setUploadResult(result);
     setHasUploadedFile(true);
-    setIsProcessing(false);
+    
+    // Progress demo to step 2 if in demo mode and keep processing active
+    if (isDemoMode) {
+      setCurrentDemoStep(2);
+      // Auto-scroll to processing section
+      setTimeout(() => {
+        const processingSection = document.querySelector('[data-testid="processing-section"]');
+        if (processingSection) {
+          processingSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 500);
+    }
     
     // Simulate AI processing time before showing forecast
     setTimeout(() => {
+      setIsProcessing(false); // Stop processing animation
       setShowForecast(true);
+      // Progress demo to step 3 if in demo mode
+      if (isDemoMode) {
+        setCurrentDemoStep(3);
+        // Auto-scroll to forecast section
+        setTimeout(() => {
+          const forecastSection = document.querySelector('[data-testid="forecast-section"]');
+          if (forecastSection) {
+            forecastSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 500);
+      }
     }, 2000);
   };
 
   const handleGenerateOrder = () => {
     console.log('Generate order triggered');
     setShowOrder(true);
+    
+    // Progress demo to step 4 if in demo mode
+    if (isDemoMode) {
+      setCurrentDemoStep(4);
+      // Auto-scroll to order section
+      setTimeout(() => {
+        const orderSection = document.querySelector('[data-testid="order-section"]');
+        if (orderSection) {
+          orderSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 500);
+    }
+  };
+
+  const handleStartDemo = () => {
+    console.log('Demo started');
+    setIsDemoMode(true);
+    setCurrentDemoStep(1);
+    // Scroll to upload area
+    setTimeout(() => {
+      const uploadSection = document.querySelector('[data-testid="upload-section"]');
+      if (uploadSection) {
+        uploadSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  };
+
+  const handleExitDemo = () => {
+    console.log('Demo exited');
+    setIsDemoMode(false);
+    setCurrentDemoStep(1);
+    // Reset demo state
+    setHasUploadedFile(false);
+    setShowForecast(false);
+    setShowOrder(false);
+    setUploadResult(null);
+    setIsProcessing(false);
   };
 
   return (
@@ -101,12 +164,40 @@ export default function Dashboard() {
           />
         </div>
 
+        {/* Try Now Demo - Show when no file uploaded */}
+        {!hasUploadedFile && !isDemoMode && (
+          <div className="text-center py-8 space-y-6">
+            <div className="space-y-3">
+              <div className="flex justify-center">
+                <Sparkles className="w-12 h-12 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">
+                Ready to reduce your produce costs by 10%?
+              </h2>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Discover how AI can transform your purchasing decisions and save money every day.
+              </p>
+            </div>
+            <TryNowDemo 
+              onStartDemo={handleStartDemo} 
+              isDemoActive={isDemoMode}
+              currentDemoStep={currentDemoStep}
+              onExitDemo={handleExitDemo}
+            />
+          </div>
+        )}
+
         {/* Upload Section */}
-        {!hasUploadedFile && (
-          <div>
+        {(!hasUploadedFile && isDemoMode) && (
+          <div data-testid="upload-section" className={isDemoMode && currentDemoStep === 1 ? "ring-2 ring-primary ring-offset-2 rounded-lg p-4" : ""}>
             <h2 className="text-lg font-semibold mb-3 text-foreground">
-              Start by uploading your sales data
+              {isDemoMode ? "Step 1: Upload Your Sales Data" : "Start by uploading your sales data"}
             </h2>
+            {isDemoMode && (
+              <p className="text-sm text-muted-foreground mb-4">
+                Upload a CSV file with your sales history from the last 30 days. Include columns for date, item, quantity, unit, and price.
+              </p>
+            )}
             <UploadArea 
               onFileUpload={handleFileUpload} 
               onUploadStart={handleUploadStart}
@@ -116,10 +207,15 @@ export default function Dashboard() {
 
         {/* Processing Status */}
         {isProcessing && (
-          <div>
+          <div data-testid="processing-section" className={isDemoMode && currentDemoStep === 2 ? "ring-2 ring-accent ring-offset-2 rounded-lg p-4" : ""}>
             <h2 className="text-lg font-semibold mb-3 text-foreground">
-              Processing your data...
+              {isDemoMode && currentDemoStep === 2 ? "Step 2: AI Analysis in Progress" : "Processing your data..."}
             </h2>
+            {isDemoMode && currentDemoStep === 2 && (
+              <p className="text-sm text-muted-foreground mb-4">
+                Our AI is analyzing your sales patterns, identifying trends, and calculating optimal order quantities.
+              </p>
+            )}
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
               <p className="text-muted-foreground">Analyzing sales patterns with AI</p>
@@ -153,10 +249,15 @@ export default function Dashboard() {
 
         {/* Forecast Section */}
         {showForecast && (
-          <div>
+          <div data-testid="forecast-section" className={isDemoMode && currentDemoStep === 3 ? "ring-2 ring-accent ring-offset-2 rounded-lg p-4" : ""}>
             <h2 className="text-lg font-semibold mb-3 text-foreground">
-              AI Forecast Results
+              {isDemoMode && currentDemoStep === 3 ? "Step 3: Review AI Forecasts" : "AI Forecast Results"}
             </h2>
+            {isDemoMode && currentDemoStep === 3 && (
+              <p className="text-sm text-muted-foreground mb-4">
+                Review the AI predictions showing demand forecasts, confidence scores, and potential savings. Click "Generate Order" when ready.
+              </p>
+            )}
             <ForecastCard
               date="Tomorrow"
               items={mockForecastItems}
@@ -168,18 +269,39 @@ export default function Dashboard() {
 
         {/* Order Section */}
         {showOrder && (
-          <div>
+          <div data-testid="order-section" className={isDemoMode && currentDemoStep === 4 ? "ring-2 ring-accent ring-offset-2 rounded-lg p-4" : ""}>
             <h2 className="text-lg font-semibold mb-3 text-foreground">
-              Generated Purchase Order
+              {isDemoMode && currentDemoStep === 4 ? "Step 4: Approve & Send Order" : "Generated Purchase Order"}
             </h2>
+            {isDemoMode && currentDemoStep === 4 && (
+              <p className="text-sm text-muted-foreground mb-4">
+                Review the automatically generated purchase order. Approve it and send directly to your supplier via WhatsApp.
+              </p>
+            )}
             <OrderCard
               orderId="PO-2024-001"
               supplier="Green Valley Farms"
               status="draft"
               items={mockOrderItems}
               total={179.15}
-              onApprove={() => console.log('Order approved')}
-              onSend={() => console.log('Order sent via WhatsApp')}
+              onApprove={() => {
+                console.log('Order approved');
+                if (isDemoMode) {
+                  // Demo completed successfully
+                  setTimeout(() => {
+                    handleExitDemo();
+                  }, 2000);
+                }
+              }}
+              onSend={() => {
+                console.log('Order sent via WhatsApp');
+                if (isDemoMode) {
+                  // Demo completed successfully
+                  setTimeout(() => {
+                    handleExitDemo();
+                  }, 2000);
+                }
+              }}
             />
           </div>
         )}
