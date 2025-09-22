@@ -41,13 +41,15 @@ export default function Dashboard() {
       if (!response.ok) throw new Error('Failed to generate forecasts');
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Forecast generation successful:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/forecasts'] });
       setShowForecast(true);
       setIsGeneratingForecast(false);
       toast({ title: "Forecasts generated successfully" });
     },
     onError: (error: any) => {
+      console.log('Forecast generation failed:', error);
       setIsGeneratingForecast(false);
       toast({ 
         title: "Failed to generate forecasts", 
@@ -73,6 +75,7 @@ export default function Dashboard() {
   };
 
   const handleGenerateForecast = () => {
+    console.log('Generate forecast button clicked');
     setIsGeneratingForecast(true);
     generateForecastMutation.mutate({
       forecastDays: 7,
