@@ -197,24 +197,29 @@ export default function Dashboard() {
             <h2 className="text-lg font-semibold mb-3 text-foreground">
               AI Forecast Results
             </h2>
-            {console.log('Forecast section - showForecast:', showForecast, 'forecasts:', forecasts, 'isArray:', Array.isArray(forecasts))}
-            {Array.isArray(forecasts) ? (
-              <ForecastCard
-                date="Next 7 Days"
-                items={forecasts}
-                totalSavings={(forecasts.reduce((sum: number, item: any) => sum + (item.predictedSavingsInCents || 0), 0) / 100) || 0}
-                onGenerateOrder={handleGenerateOrder}
-              />
-            ) : (
-              <div className="text-center py-4 text-muted-foreground">
-                {forecastsLoading ? 'Loading forecasts...' : 'No forecast data available'}
-              </div>
-            )}
+            {(() => {
+              // Extract the actual forecast array from the API response
+              const forecastArray = forecasts?.forecasts || [];
+              console.log('Forecast array extracted:', forecastArray);
+              
+              return Array.isArray(forecastArray) && forecastArray.length > 0 ? (
+                <ForecastCard
+                  date="Next 7 Days"
+                  items={forecastArray}
+                  totalSavings={(forecastArray.reduce((sum: number, item: any) => sum + (item.predictedSavingsInCents || 0), 0) / 100) || 0}
+                  onGenerateOrder={handleGenerateOrder}
+                />
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  {forecastsLoading ? 'Loading forecasts...' : 'No forecast data available'}
+                </div>
+              );
+            })()}
           </div>
         )}
 
         {/* Order Section */}
-        {showOrder && Array.isArray(forecasts) && (
+        {showOrder && forecasts?.forecasts && Array.isArray(forecasts.forecasts) && (
           <div data-testid="order-section">
             <h2 className="text-lg font-semibold mb-3 text-foreground">
               Generated Purchase Order
@@ -223,13 +228,13 @@ export default function Dashboard() {
               orderId={`PO-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`}
               supplier="Your Supplier"
               status="draft"
-              items={forecasts.map((forecast: any) => ({
+              items={forecasts.forecasts.map((forecast: any) => ({
                 item: forecast.item,
-                quantity: forecast.recommendedOrderQuantity,
+                quantity: forecast.basedOnData?.recommendedOrderQuantity || forecast.predictedQuantity,
                 unit: "units",
-                price: forecast.recommendedOrderQuantity * 1.00 // Default $1 per unit
+                price: (forecast.basedOnData?.recommendedOrderQuantity || forecast.predictedQuantity) * 1.00 // Default $1 per unit
               }))}
-              total={forecasts.reduce((sum: number, forecast: any) => sum + (forecast.recommendedOrderQuantity * 1.00), 0)}
+              total={forecasts.forecasts.reduce((sum: number, forecast: any) => sum + ((forecast.basedOnData?.recommendedOrderQuantity || forecast.predictedQuantity) * 1.00), 0)}
               onApprove={() => {
                 console.log('Order approved');
                 toast({ title: "Order approved successfully" });
