@@ -192,17 +192,24 @@ export default function Dashboard() {
         )}
 
         {/* Forecast Section */}
-        {showForecast && Array.isArray(forecasts) && (
+        {showForecast && (
           <div data-testid="forecast-section">
             <h2 className="text-lg font-semibold mb-3 text-foreground">
               AI Forecast Results
             </h2>
-            <ForecastCard
-              date="Next 7 Days"
-              items={forecasts}
-              totalSavings={(forecasts.reduce((sum: number, item: any) => sum + (item.predictedSavingsInCents || 0), 0) / 100) || 0}
-              onGenerateOrder={handleGenerateOrder}
-            />
+            {console.log('Forecast section - showForecast:', showForecast, 'forecasts:', forecasts, 'isArray:', Array.isArray(forecasts))}
+            {Array.isArray(forecasts) ? (
+              <ForecastCard
+                date="Next 7 Days"
+                items={forecasts}
+                totalSavings={(forecasts.reduce((sum: number, item: any) => sum + (item.predictedSavingsInCents || 0), 0) / 100) || 0}
+                onGenerateOrder={handleGenerateOrder}
+              />
+            ) : (
+              <div className="text-center py-4 text-muted-foreground">
+                {forecastsLoading ? 'Loading forecasts...' : 'No forecast data available'}
+              </div>
+            )}
           </div>
         )}
 
