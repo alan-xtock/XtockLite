@@ -201,7 +201,8 @@ export default function Dashboard() {
             {(() => {
               // Extract the actual forecast array from the API response
               const forecastArray = (forecasts as any)?.forecasts || [];
-              const weather = (forecasts as any)?.weather || 'cloudy';
+              // Use the currently selected weather instead of API response to avoid stale data
+              const weather = selectedWeather;
               
               return Array.isArray(forecastArray) && forecastArray.length > 0 ? (
                 <ForecastCard
@@ -256,24 +257,30 @@ export default function Dashboard() {
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center gap-4">
               <span className="text-sm font-medium text-muted-foreground">Weather for tomorrow:</span>
-              <Select value={selectedWeather} onValueChange={(value: "sunny" | "cloudy" | "rainy") => setSelectedWeather(value)}>
-                <SelectTrigger className="w-32">
+              <Select 
+                value={selectedWeather} 
+                onValueChange={(value: "sunny" | "cloudy" | "rainy") => {
+                  console.log('Weather selection changed to:', value);
+                  setSelectedWeather(value);
+                }}
+              >
+                <SelectTrigger className="w-32" data-testid="select-weather">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sunny">
+                <SelectContent data-testid="select-weather-content">
+                  <SelectItem value="sunny" data-testid="option-sunny">
                     <div className="flex items-center gap-2">
                       <Sun className="h-4 w-4" />
                       Sunny
                     </div>
                   </SelectItem>
-                  <SelectItem value="cloudy">
+                  <SelectItem value="cloudy" data-testid="option-cloudy">
                     <div className="flex items-center gap-2">
                       <Cloud className="h-4 w-4" />
                       Cloudy
                     </div>
                   </SelectItem>
-                  <SelectItem value="rainy">
+                  <SelectItem value="rainy" data-testid="option-rainy">
                     <div className="flex items-center gap-2">
                       <CloudRain className="h-4 w-4" />
                       Rainy
