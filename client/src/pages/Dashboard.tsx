@@ -5,7 +5,8 @@ import ForecastCard from "@/components/ForecastCard";
 import OrderCard from "@/components/OrderCard";
 import StatsCard from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RefreshCw, Sun, Cloud, CloudRain } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const [showOrder, setShowOrder] = useState(false);
   const [uploadResult, setUploadResult] = useState<any>(null);
   const [isGeneratingForecast, setIsGeneratingForecast] = useState(false);
+  const [selectedWeather, setSelectedWeather] = useState<"sunny" | "cloudy" | "rainy">("cloudy");
   const { toast } = useToast();
 
   // Fetch real sales data
@@ -32,7 +34,7 @@ export default function Dashboard() {
 
   // Generate forecasts mutation
   const generateForecastMutation = useMutation({
-    mutationFn: async (params: { forecastDays: number; bufferPercentage: number }) => {
+    mutationFn: async (params: { weather?: "sunny" | "cloudy" | "rainy" }) => {
       const response = await fetch('/api/forecasts/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -78,8 +80,7 @@ export default function Dashboard() {
     console.log('Generate forecast button clicked');
     setIsGeneratingForecast(true);
     generateForecastMutation.mutate({
-      forecastDays: 7,
-      bufferPercentage: 20
+      weather: selectedWeather
     });
   };
 
@@ -195,18 +196,21 @@ export default function Dashboard() {
         {showForecast && (
           <div data-testid="forecast-section">
             <h2 className="text-lg font-semibold mb-3 text-foreground">
-              AI Forecast Results
+              Next-Day Sales Forecast
             </h2>
             {(() => {
               // Extract the actual forecast array from the API response
-              const forecastArray = forecasts?.forecasts || [];
-              console.log('Forecast array extracted:', forecastArray);
+              const forecastArray = (forecasts as any)?.forecasts || [];
+              const weather = (forecasts as any)?.weather || 'cloudy';
               
               return Array.isArray(forecastArray) && forecastArray.length > 0 ? (
                 <ForecastCard
-                  date="Next 7 Days"
-                  items={forecastArray}
-                  totalSavings={(forecastArray.reduce((sum: number, item: any) => sum + (item.predictedSavingsInCents || 0), 0) / 100) || 0}
+                  date="Tomorrow"
+                  items={forecastArray.map((item: any) => ({
+                    item: item.item,
+                    predictedQuantity: item.predictedQuantity
+                  }))}
+                  weather={weather}
                   onGenerateOrder={handleGenerateOrder}
                 />
               ) : (
@@ -219,7 +223,7 @@ export default function Dashboard() {
         )}
 
         {/* Order Section */}
-        {showOrder && forecasts?.forecasts && Array.isArray(forecasts.forecasts) && (
+        {showOrder && (forecasts as any)?.forecasts && Array.isArray((forecasts as any).forecasts) && (
           <div data-testid="order-section">
             <h2 className="text-lg font-semibold mb-3 text-foreground">
               Generated Purchase Order
@@ -228,13 +232,13 @@ export default function Dashboard() {
               orderId={`PO-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`}
               supplier="Your Supplier"
               status="draft"
-              items={forecasts.forecasts.map((forecast: any) => ({
+              items={(forecasts as any).forecasts.map((forecast: any) => ({
                 item: forecast.item,
                 quantity: forecast.basedOnData?.recommendedOrderQuantity || forecast.predictedQuantity,
                 unit: "units",
                 price: (forecast.basedOnData?.recommendedOrderQuantity || forecast.predictedQuantity) * 1.00 // Default $1 per unit
               }))}
-              total={forecasts.forecasts.reduce((sum: number, forecast: any) => sum + ((forecast.basedOnData?.recommendedOrderQuantity || forecast.predictedQuantity) * 1.00), 0)}
+              total={(forecasts as any).forecasts.reduce((sum: number, forecast: any) => sum + ((forecast.basedOnData?.recommendedOrderQuantity || forecast.predictedQuantity) * 1.00), 0)}
               onApprove={() => {
                 console.log('Order approved');
                 toast({ title: "Order approved successfully" });
@@ -247,9 +251,37 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Generate Forecast Button */}
+        {/* Weather Selector & Generate Forecast Button */}
         {hasUploadedFile && !isGeneratingForecast && (
-          <div className="text-center">
+          <div className="text-center space-y-4">
+            <div className="flex items-center justify-center gap-4">
+              <span className="text-sm font-medium text-muted-foreground">Weather for tomorrow:</span>
+              <Select value={selectedWeather} onValueChange={(value: "sunny" | "cloudy" | "rainy") => setSelectedWeather(value)}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sunny">
+                    <div className="flex items-center gap-2">
+                      <Sun className="h-4 w-4" />
+                      Sunny
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="cloudy">
+                    <div className="flex items-center gap-2">
+                      <Cloud className="h-4 w-4" />
+                      Cloudy
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="rainy">
+                    <div className="flex items-center gap-2">
+                      <CloudRain className="h-4 w-4" />
+                      Rainy
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Button 
               onClick={handleGenerateForecast}
               size="lg"

@@ -361,15 +361,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Request validation schema
   const forecastRequestSchema = z.object({
-    forecastDays: z.number().min(1).max(30).default(7),
-    bufferPercentage: z.number().min(0).max(50).default(20)
+    weather: z.enum(["sunny", "cloudy", "rainy"]).optional().default("cloudy")
   });
 
   // Forecast generation endpoint
   app.post('/api/forecasts/generate', async (req, res) => {
     try {
       // Validate request body
-      const { forecastDays, bufferPercentage } = forecastRequestSchema.parse(req.body);
+      const { weather } = forecastRequestSchema.parse(req.body);
 
       // Get recent sales data
       const salesData = await storage.getSalesData(1000); // Get last 1000 records
@@ -384,8 +383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate AI forecasts
       const forecastResults = await generateForecasts({
         salesData,
-        forecastDays,
-        bufferPercentage
+        weather
       });
 
       // Convert forecast results to database format with validation
@@ -393,18 +391,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const result of forecastResults) {
         try {
           const forecastData = {
-            forecastDate: new Date(Date.now() + forecastDays * 24 * 60 * 60 * 1000),
+            forecastDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Next day
             item: result.item,
             predictedQuantity: result.predictedQuantity,
-            confidence: Math.round(result.confidence * 100),
+            confidence: 75, // Default confidence for simplified system
             currentStock: null, // Unknown inventory
-            predictedSavingsInCents: Math.min(result.estimatedSavings, 100000), // Cap at $1000
+            predictedSavingsInCents: 0, // No savings calculation in simplified system
             basedOnData: { 
               dataPoints: salesData.filter(s => s.item === result.item).length,
-              forecastPeriod: forecastDays,
-              reasoning: result.reasoning,
-              recommendedOrderQuantity: result.recommendedOrderQuantity,
-              forecastType: result.forecastType
+              forecastPeriod: 1, // 1-day prediction
+              reasoning: `Next-day prediction: ${result.predictedQuantity} units`,
+              recommendedOrderQuantity: result.predictedQuantity,
+              forecastType: "daily" as const,
+              weather: weather
             }
           };
           
@@ -425,9 +424,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         success: true,
-        message: `Generated ${savedForecasts.length} forecasts`,
+        message: `Generated ${savedForecasts.length} next-day forecasts`,
         forecasts: savedForecasts,
-        forecastPeriod: forecastDays,
+        forecastPeriod: 1, // 1-day predictions
+        weather: weather,
         dataPointsUsed: salesData.length
       });
 
@@ -454,9 +454,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { limit = 50 } = req.query;
       const forecasts = await storage.getForecasts(parseInt(limit as string));
       
+      // Extract weather from most recent forecast's basedOnData
+      const weather = forecasts.length > 0 && forecasts[0].basedOnData 
+        ? (forecasts[0].basedOnData as any)?.weather || 'cloudy'
+        : 'cloudy';
+      
       res.json({
         success: true,
         forecasts,
+        weather,
         count: forecasts.length
       });
     } catch (error) {

@@ -5,26 +5,20 @@ import { TrendingUp, Brain, Calendar } from "lucide-react";
 
 interface ForecastItem {
   item: string;
-  currentStock: number | null;
   predictedQuantity: number;
-  confidence: number;
-  predictedSavingsInCents: number;
-  basedOnData?: {
-    recommendedOrderQuantity: number;
-  };
 }
 
 interface ForecastCardProps {
   date: string;
   items: ForecastItem[];
-  totalSavings: number;
+  weather?: string;
   onGenerateOrder?: () => void;
 }
 
 export default function ForecastCard({ 
   date, 
   items, 
-  totalSavings, 
+  weather = "cloudy",
   onGenerateOrder 
 }: ForecastCardProps) {
   return (
@@ -41,10 +35,10 @@ export default function ForecastCard({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between p-3 bg-accent/10 rounded-lg">
-          <span className="text-sm font-medium">Predicted Savings</span>
+          <span className="text-sm font-medium">Weather Forecast</span>
           <div className="flex items-center gap-1">
             <TrendingUp className="h-4 w-4 text-accent" />
-            <span className="text-lg font-bold text-accent">${totalSavings}</span>
+            <span className="text-lg font-bold text-accent capitalize">{weather}</span>
           </div>
         </div>
         
@@ -54,15 +48,12 @@ export default function ForecastCard({
               <div className="flex-1">
                 <div className="font-medium text-foreground">{item.item}</div>
                 <div className="text-xs text-muted-foreground">
-                  Current: {item.currentStock || 'Unknown'} | Predicted: {item.predictedQuantity}
+                  Predicted sales for tomorrow
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs">
-                  {item.confidence}% confident
-                </Badge>
-                <span className="text-sm font-medium text-accent">
-                  +${(item.predictedSavingsInCents / 100).toFixed(2)}
+                <span className="text-lg font-bold text-primary">
+                  {item.predictedQuantity} units
                 </span>
               </div>
             </div>
