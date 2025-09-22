@@ -25,6 +25,117 @@ export interface ForecastRequest {
 }
 
 /**
+ * Statistical fallback forecaster when AI is unavailable
+ */
+function generateStatisticalForecasts(request: ForecastRequest): ForecastResult[] {
+  const { salesData, forecastDays, bufferPercentage = 20 } = request;
+  
+  if (salesData.length === 0) {
+    return [];
+  }
+
+  // Group sales data by item for analysis
+  const itemGroups = groupSalesDataByItem(salesData);
+  const results: ForecastResult[] = [];
+  
+  for (const [item, sales] of Object.entries(itemGroups)) {
+    if (sales.length === 0) continue;
+    
+    // Sort by date
+    sales.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    // Aggregate by date to get daily totals (multiple entries per day need to be combined)
+    const dailyTotals = new Map<string, { quantity: number; priceTotal: number; priceCount: number }>();
+    
+    for (const sale of sales) {
+      // Use timezone-safe date formatting
+      const saleDate = new Date(sale.date);
+      const dateKey = `${saleDate.getFullYear()}-${String(saleDate.getMonth() + 1).padStart(2, '0')}-${String(saleDate.getDate()).padStart(2, '0')}`;
+      const existing = dailyTotals.get(dateKey) || { quantity: 0, priceTotal: 0, priceCount: 0 };
+      
+      dailyTotals.set(dateKey, {
+        quantity: existing.quantity + sale.quantity,
+        priceTotal: existing.priceTotal + (sale.priceInCents * sale.quantity), // Quantity-weighted price
+        priceCount: existing.priceCount + sale.quantity
+      });
+    }
+    
+    // Convert to arrays for analysis
+    const dailyQuantities = Array.from(dailyTotals.values()).map(d => d.quantity);
+    const totalQuantity = dailyQuantities.reduce((sum, qty) => sum + qty, 0);
+    const uniqueDays = dailyTotals.size;
+    const dailyAverage = uniqueDays > 0 ? totalQuantity / uniqueDays : 0;
+    
+    if (dailyAverage === 0) {
+      continue; // Skip items with no sales
+    }
+    
+    // Recent trend analysis (last 14 days vs previous 14 days)
+    const recentDays = Math.min(14, Math.floor(uniqueDays / 2));
+    
+    let recentAvg = dailyAverage;
+    let previousAvg = dailyAverage;
+    
+    if (recentDays > 0) {
+      const recentQuantities = dailyQuantities.slice(-recentDays);
+      const previousQuantities = dailyQuantities.slice(-recentDays * 2, -recentDays);
+      
+      recentAvg = recentQuantities.reduce((sum, qty) => sum + qty, 0) / recentDays;
+      previousAvg = previousQuantities.length > 0 ? 
+        previousQuantities.reduce((sum, qty) => sum + qty, 0) / previousQuantities.length : 
+        dailyAverage;
+    }
+    
+    // Apply trend adjustment
+    let adjustedDaily = dailyAverage;
+    if (recentDays >= 7 && previousAvg > 0) {
+      const trendMultiplier = recentAvg / previousAvg;
+      adjustedDaily = dailyAverage * Math.min(Math.max(trendMultiplier, 0.5), 2.0); // Cap trend adjustment
+    }
+    
+    // Calculate forecast
+    const basePrediction = adjustedDaily * forecastDays;
+    const withBuffer = basePrediction * (1 + bufferPercentage / 100);
+    const recommendedOrder = Math.max(0, Math.round(withBuffer)); // Allow 0 orders
+    
+    // Calculate confidence based on daily quantity variance
+    const variance = dailyQuantities.reduce((sum, qty) => Math.pow(qty - dailyAverage, 2), 0) / uniqueDays;
+    const coefficient = dailyAverage > 0 ? Math.sqrt(variance) / dailyAverage : 1;
+    const confidence = Math.max(0.3, Math.min(0.8, 1 - coefficient)); // 30-80% confidence range
+    
+    // Estimate savings using quantity-weighted average price
+    const totalPriceValue = Array.from(dailyTotals.values()).reduce((sum, day) => sum + day.priceTotal, 0);
+    const totalPriceQuantity = Array.from(dailyTotals.values()).reduce((sum, day) => sum + day.priceCount, 0);
+    const avgPricePerUnit = totalPriceQuantity > 0 ? totalPriceValue / totalPriceQuantity : 100; // Default 1 dollar
+    const estimatedSavings = Math.round(recommendedOrder * avgPricePerUnit * 0.05); // 5% savings
+    
+    // Determine forecast type based on date span
+    const sortedDates = Array.from(dailyTotals.keys()).sort();
+    const dateSpan = sortedDates.length > 1 ? Math.ceil(
+      (new Date(sortedDates[sortedDates.length - 1]).getTime() - new Date(sortedDates[0]).getTime()) / 
+      (1000 * 60 * 60 * 24)
+    ) : 1;
+    const forecastType: "weekly" | "monthly" | "seasonal" = 
+      dateSpan >= 90 ? "seasonal" : dateSpan >= 30 ? "monthly" : "weekly";
+    
+    const trendDescription = recentAvg > previousAvg * 1.1 ? 'increasing' : 
+                           recentAvg < previousAvg * 0.9 ? 'decreasing' : 'stable';
+    
+    results.push({
+      item,
+      predictedQuantity: Math.round(basePrediction),
+      confidence,
+      reasoning: `Statistical forecast based on ${uniqueDays} days of data over ${dateSpan} day period. Daily average: ${dailyAverage.toFixed(1)} units, recent trend: ${trendDescription}.`,
+      recommendedOrderQuantity: recommendedOrder,
+      estimatedSavings,
+      forecastType
+    });
+  }
+  
+  return results;
+}
+
+/**
  * Analyzes sales data and generates AI-powered forecasts for purchasing decisions
  */
 export async function generateForecasts(request: ForecastRequest): Promise<ForecastResult[]> {
@@ -40,6 +151,12 @@ export async function generateForecasts(request: ForecastRequest): Promise<Forec
   // Prepare data summary for AI analysis
   const dataSummary = prepareSalesDataSummary(itemGroups, forecastDays);
   
+  // Check if we can use AI forecasting
+  if (!process.env.OPENAI_API_KEY) {
+    console.warn("OPENAI_API_KEY not found. Using statistical fallback forecasting.");
+    return generateStatisticalForecasts(request);
+  }
+
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-5",
@@ -91,7 +208,8 @@ Requirements:
     const result = JSON.parse(response.choices[0].message.content || "{}");
     
     if (!result.forecasts || !Array.isArray(result.forecasts)) {
-      throw new Error("Invalid AI response format");
+      console.warn("Invalid AI response format, falling back to statistical forecasting");
+      return generateStatisticalForecasts(request);
     }
 
     return result.forecasts.map((forecast: any) => ({
@@ -105,8 +223,21 @@ Requirements:
     }));
 
   } catch (error) {
-    console.error("AI forecasting error:", error);
-    throw new Error(`Failed to generate forecasts: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("AI forecasting failed, using statistical fallback:", error);
+    
+    // Check if it's a specific OpenAI error
+    if (error instanceof Error) {
+      if (error.message.includes('401')) {
+        console.error("OpenAI API authentication failed. Check OPENAI_API_KEY.");
+      } else if (error.message.includes('429')) {
+        console.error("OpenAI API rate limit exceeded. Using fallback forecasting.");
+      } else if (error.message.includes('5')) {
+        console.error("OpenAI API server error. Using fallback forecasting.");
+      }
+    }
+    
+    // Always fall back to statistical forecasting instead of throwing
+    return generateStatisticalForecasts(request);
   }
 }
 
