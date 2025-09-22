@@ -11,24 +11,18 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export interface ForecastResult {
   item: string;
   predictedQuantity: number;
-  confidence: number;
-  reasoning: string;
-  recommendedOrderQuantity: number;
-  estimatedSavings: number;
-  forecastType: "weekly" | "monthly" | "seasonal";
 }
 
 export interface ForecastRequest {
   salesData: SalesData[];
-  forecastDays: number;
-  bufferPercentage?: number; // Safety stock percentage
+  weather?: "sunny" | "cloudy" | "rainy"; // Weather for next day
 }
 
 /**
- * Statistical fallback forecaster when AI is unavailable
+ * Statistical fallback forecaster using weighted block calculation
  */
 function generateStatisticalForecasts(request: ForecastRequest): ForecastResult[] {
-  const { salesData, forecastDays, bufferPercentage = 20 } = request;
+  const { salesData, weather = "cloudy" } = request;
   
   if (salesData.length === 0) {
     return [];
@@ -41,94 +35,53 @@ function generateStatisticalForecasts(request: ForecastRequest): ForecastResult[
   for (const [item, sales] of Object.entries(itemGroups)) {
     if (sales.length === 0) continue;
     
-    // Sort by date
+    // Sort by date (oldest first)
     sales.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
     // Aggregate by date to get daily totals (multiple entries per day need to be combined)
-    const dailyTotals = new Map<string, { quantity: number; priceTotal: number; priceCount: number }>();
+    const dailyTotals = new Map<string, number>();
     
     for (const sale of sales) {
-      // Use timezone-safe date formatting
       const saleDate = new Date(sale.date);
       const dateKey = `${saleDate.getFullYear()}-${String(saleDate.getMonth() + 1).padStart(2, '0')}-${String(saleDate.getDate()).padStart(2, '0')}`;
-      const existing = dailyTotals.get(dateKey) || { quantity: 0, priceTotal: 0, priceCount: 0 };
-      
-      dailyTotals.set(dateKey, {
-        quantity: existing.quantity + sale.quantity,
-        priceTotal: existing.priceTotal + (sale.priceInCents * sale.quantity), // Quantity-weighted price
-        priceCount: existing.priceCount + sale.quantity
-      });
+      const existing = dailyTotals.get(dateKey) || 0;
+      dailyTotals.set(dateKey, existing + sale.quantity);
     }
     
-    // Convert to arrays for analysis
-    const dailyQuantities = Array.from(dailyTotals.values()).map(d => d.quantity);
-    const totalQuantity = dailyQuantities.reduce((sum, qty) => sum + qty, 0);
-    const uniqueDays = dailyTotals.size;
-    const dailyAverage = uniqueDays > 0 ? totalQuantity / uniqueDays : 0;
-    
-    if (dailyAverage === 0) {
-      continue; // Skip items with no sales
-    }
-    
-    // Recent trend analysis (last 14 days vs previous 14 days)
-    const recentDays = Math.min(14, Math.floor(uniqueDays / 2));
-    
-    let recentAvg = dailyAverage;
-    let previousAvg = dailyAverage;
-    
-    if (recentDays > 0) {
-      const recentQuantities = dailyQuantities.slice(-recentDays);
-      const previousQuantities = dailyQuantities.slice(-recentDays * 2, -recentDays);
-      
-      recentAvg = recentQuantities.reduce((sum, qty) => sum + qty, 0) / recentDays;
-      previousAvg = previousQuantities.length > 0 ? 
-        previousQuantities.reduce((sum, qty) => sum + qty, 0) / previousQuantities.length : 
-        dailyAverage;
-    }
-    
-    // Apply trend adjustment
-    let adjustedDaily = dailyAverage;
-    if (recentDays >= 7 && previousAvg > 0) {
-      const trendMultiplier = recentAvg / previousAvg;
-      adjustedDaily = dailyAverage * Math.min(Math.max(trendMultiplier, 0.5), 2.0); // Cap trend adjustment
-    }
-    
-    // Calculate forecast
-    const basePrediction = adjustedDaily * forecastDays;
-    const withBuffer = basePrediction * (1 + bufferPercentage / 100);
-    const recommendedOrder = Math.max(0, Math.round(withBuffer)); // Allow 0 orders
-    
-    // Calculate confidence based on daily quantity variance
-    const variance = dailyQuantities.reduce((sum, qty) => Math.pow(qty - dailyAverage, 2), 0) / uniqueDays;
-    const coefficient = dailyAverage > 0 ? Math.sqrt(variance) / dailyAverage : 1;
-    const confidence = Math.max(0.3, Math.min(0.8, 1 - coefficient)); // 30-80% confidence range
-    
-    // Estimate savings using quantity-weighted average price
-    const totalPriceValue = Array.from(dailyTotals.values()).reduce((sum, day) => sum + day.priceTotal, 0);
-    const totalPriceQuantity = Array.from(dailyTotals.values()).reduce((sum, day) => sum + day.priceCount, 0);
-    const avgPricePerUnit = totalPriceQuantity > 0 ? totalPriceValue / totalPriceQuantity : 100; // Default 1 dollar
-    const estimatedSavings = Math.round(recommendedOrder * avgPricePerUnit * 0.05); // 5% savings
-    
-    // Determine forecast type based on date span
+    // Get the last 30 unique days
     const sortedDates = Array.from(dailyTotals.keys()).sort();
-    const dateSpan = sortedDates.length > 1 ? Math.ceil(
-      (new Date(sortedDates[sortedDates.length - 1]).getTime() - new Date(sortedDates[0]).getTime()) / 
-      (1000 * 60 * 60 * 24)
-    ) : 1;
-    const forecastType: "weekly" | "monthly" | "seasonal" = 
-      dateSpan >= 90 ? "seasonal" : dateSpan >= 30 ? "monthly" : "weekly";
+    const last30Days = sortedDates.slice(-30);
     
-    const trendDescription = recentAvg > previousAvg * 1.1 ? 'increasing' : 
-                           recentAvg < previousAvg * 0.9 ? 'decreasing' : 'stable';
+    // Only predict if we have at least 30 unique days of data
+    if (last30Days.length < 30) {
+      continue;
+    }
+    
+    // Split into 4 blocks with correct weights (oldest → newest)
+    const block1 = last30Days.slice(0, 7);   // Days 1-7 (oldest) → 50% weight
+    const block2 = last30Days.slice(7, 14);  // Days 8-14 → 30% weight
+    const block3 = last30Days.slice(14, 21); // Days 15-21 → 10% weight
+    const block4 = last30Days.slice(21, 30); // Days 22-30 (most recent) → 10% weight
+    
+    // Calculate average quantity for each block
+    const avg1 = block1.reduce((sum, dateKey) => sum + (dailyTotals.get(dateKey) || 0), 0) / block1.length;
+    const avg2 = block2.reduce((sum, dateKey) => sum + (dailyTotals.get(dateKey) || 0), 0) / block2.length;
+    const avg3 = block3.reduce((sum, dateKey) => sum + (dailyTotals.get(dateKey) || 0), 0) / block3.length;
+    const avg4 = block4.reduce((sum, dateKey) => sum + (dailyTotals.get(dateKey) || 0), 0) / block4.length;
+    
+    // Apply weights and sum: 50% (oldest) + 30% + 10% + 10% (newest)
+    const weightedAverage = (avg1 * 0.5) + (avg2 * 0.3) + (avg3 * 0.1) + (avg4 * 0.1);
+    
+    // Apply weather adjustment
+    let weatherMultiplier = 1.0;
+    if (weather === "sunny") weatherMultiplier = 1.2;
+    else if (weather === "rainy") weatherMultiplier = 0.8;
+    
+    const prediction = Math.round((weightedAverage * weatherMultiplier) * 100) / 100; // Round to 2 decimals
     
     results.push({
       item,
-      predictedQuantity: Math.round(basePrediction),
-      confidence,
-      reasoning: `Statistical forecast based on ${uniqueDays} days of data over ${dateSpan} day period. Daily average: ${dailyAverage.toFixed(1)} units, recent trend: ${trendDescription}.`,
-      recommendedOrderQuantity: recommendedOrder,
-      estimatedSavings,
-      forecastType
+      predictedQuantity: prediction
     });
   }
   
@@ -139,7 +92,7 @@ function generateStatisticalForecasts(request: ForecastRequest): ForecastResult[
  * Analyzes sales data and generates AI-powered forecasts for purchasing decisions
  */
 export async function generateForecasts(request: ForecastRequest): Promise<ForecastResult[]> {
-  const { salesData, forecastDays, bufferPercentage = 20 } = request;
+  const { salesData, weather = "cloudy" } = request;
   
   if (salesData.length === 0) {
     throw new Error("No sales data provided for forecasting");
@@ -149,7 +102,7 @@ export async function generateForecasts(request: ForecastRequest): Promise<Forec
   const itemGroups = groupSalesDataByItem(salesData);
   
   // Prepare data summary for AI analysis
-  const dataSummary = prepareSalesDataSummary(itemGroups, forecastDays);
+  const dataSummary = prepareSalesDataSummary(itemGroups);
   
   // Check if we can use AI forecasting
   if (!process.env.OPENAI_API_KEY) {
@@ -163,43 +116,49 @@ export async function generateForecasts(request: ForecastRequest): Promise<Forec
       messages: [
         {
           role: "system",
-          content: `You are an AI procurement specialist that analyzes sales data to predict future purchasing needs and optimize costs. 
+          content: `You are an AI forecasting agent for restaurant inventory.
 
-Your goal is to help reduce produce costs by 10% through accurate demand forecasting and smart ordering recommendations.
+Task: Predict the next-day sales quantity for each item based on the past 30 days of sales.
 
-For each item, analyze:
-1. Sales trends and patterns (daily/weekly cycles, growth trends)
-2. Seasonal variations
-3. Price fluctuations
-4. Optimal ordering quantity to minimize waste and stockouts
+Rules:
+- Input data format: A table with columns [Date, Item, Qty].
+- For each item, use only the last 30 days of sales.
+- Split the 30 days into 4 blocks:
+   • Days 1–7 (oldest) → 50% weight
+   • Days 8–14 → 30% weight
+   • Days 15–21 → 10% weight
+   • Days 22–30 (most recent) → 10% weight
+- Take the average Qty within each block, then apply the weights and sum them.
+- After computing the weighted average, adjust by weather:
+   • Sunny → multiply by 1.2
+   • Cloudy → multiply by 1.0
+   • Rainy → multiply by 0.8
+- Round the result to 2 decimals.
+- Output: "Predicted sales for [Item] tomorrow: [Number]" for each item in the dataset.
+
+If data is missing for any days, skip those days when calculating the block averages.
+Only predict if there are at least 30 days of data available for the item.
 
 Respond with JSON in this exact format:
 {
-  "forecasts": [
+  "predictions": [
     {
       "item": "string",
       "predictedQuantity": number,
-      "confidence": number (0-1),
-      "reasoning": "string explaining the prediction logic",
-      "recommendedOrderQuantity": number,
-      "estimatedSavings": number (in cents),
-      "forecastType": "weekly" | "monthly" | "seasonal"
+      "message": "Predicted sales for [Item] tomorrow: [Number]"
     }
   ]
 }`
         },
         {
           role: "user",
-          content: `Analyze this sales data and generate ${forecastDays}-day forecasts:
+          content: `Here is the sales data for analysis:
 
 ${dataSummary}
 
-Requirements:
-- Apply ${bufferPercentage}% safety stock buffer
-- Focus on cost reduction opportunities
-- Consider seasonal patterns
-- Recommend optimal order quantities to minimize waste
-- Estimate potential savings from better purchasing decisions`
+Weather for tomorrow: ${weather}
+
+Please analyze and provide next-day quantity predictions for each item following the weighted block calculation rules.`
         }
       ],
       response_format: { type: "json_object" },
@@ -207,19 +166,14 @@ Requirements:
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
     
-    if (!result.forecasts || !Array.isArray(result.forecasts)) {
+    if (!result.predictions || !Array.isArray(result.predictions)) {
       console.warn("Invalid AI response format, falling back to statistical forecasting");
       return generateStatisticalForecasts(request);
     }
 
-    return result.forecasts.map((forecast: any) => ({
-      item: forecast.item,
-      predictedQuantity: Math.max(0, Math.round(forecast.predictedQuantity || 0)),
-      confidence: Math.max(0, Math.min(1, forecast.confidence || 0)),
-      reasoning: forecast.reasoning || "No reasoning provided",
-      recommendedOrderQuantity: Math.max(0, Math.round(forecast.recommendedOrderQuantity || 0)),
-      estimatedSavings: Math.max(0, Math.round(forecast.estimatedSavings || 0)),
-      forecastType: forecast.forecastType || "weekly"
+    return result.predictions.map((prediction: any) => ({
+      item: prediction.item,
+      predictedQuantity: Math.max(0, Math.round((prediction.predictedQuantity || 0) * 100) / 100)
     }));
 
   } catch (error) {
@@ -255,47 +209,34 @@ function groupSalesDataByItem(salesData: SalesData[]): Record<string, SalesData[
 }
 
 /**
- * Prepares a structured summary of sales data for AI analysis
+ * Prepares a structured summary of sales data for restaurant inventory AI analysis
  */
-function prepareSalesDataSummary(itemGroups: Record<string, SalesData[]>, forecastDays: number): string {
+function prepareSalesDataSummary(itemGroups: Record<string, SalesData[]>): string {
   const summaryLines = [];
   
-  summaryLines.push(`SALES DATA ANALYSIS (${forecastDays}-day forecast period):`);
-  summaryLines.push(`Total Items: ${Object.keys(itemGroups).length}`);
-  summaryLines.push("");
-
+  summaryLines.push(`RESTAURANT INVENTORY SALES DATA:`);
+  summaryLines.push(`| Date | Item | Qty |`);
+  summaryLines.push(`|------|------|-----|`);
+  
+  // Create table format for AI analysis
+  const allSales: Array<{date: string, item: string, quantity: number}> = [];
+  
   for (const [item, sales] of Object.entries(itemGroups)) {
-    if (sales.length === 0) continue;
-    
-    // Sort by date
-    sales.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
-    // Calculate metrics
-    const totalQuantity = sales.reduce((sum, sale) => sum + sale.quantity, 0);
-    const totalValue = sales.reduce((sum, sale) => sum + (sale.priceInCents * sale.quantity), 0);
-    const avgPrice = totalValue / totalQuantity;
-    const dailyAvg = totalQuantity / sales.length;
-    
-    // Price analysis
-    const prices = sales.map(sale => sale.priceInCents);
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
-    const priceVariation = ((maxPrice - minPrice) / avgPrice) * 100;
-    
-    // Date range
-    const startDate = sales[0].date;
-    const endDate = sales[sales.length - 1].date;
-    const daySpan = Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24));
-    
-    summaryLines.push(`ITEM: ${item}`);
-    summaryLines.push(`  Period: ${startDate} to ${endDate} (${daySpan} days)`);
-    summaryLines.push(`  Total Sales: ${totalQuantity} ${sales[0].unit}`);
-    summaryLines.push(`  Daily Average: ${dailyAvg.toFixed(1)} ${sales[0].unit}`);
-    summaryLines.push(`  Price Range: $${(minPrice/100).toFixed(2)} - $${(maxPrice/100).toFixed(2)} (${priceVariation.toFixed(1)}% variation)`);
-    const uniqueSuppliers = Array.from(new Set(sales.map(s => s.supplier).filter(Boolean)));
-    summaryLines.push(`  Suppliers: ${uniqueSuppliers.join(", ") || "Not specified"}`);
-    summaryLines.push(`  Recent Trend: ${calculateTrend(sales)}`);
-    summaryLines.push("");
+    for (const sale of sales) {
+      allSales.push({
+        date: sale.date instanceof Date ? sale.date.toISOString().split('T')[0] : sale.date,
+        item: sale.item,
+        quantity: sale.quantity
+      });
+    }
+  }
+  
+  // Sort by date (newest first) and limit to reasonable amount for AI processing
+  allSales.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const recentSales = allSales.slice(0, 200); // Limit to last 200 records for AI processing
+  
+  for (const sale of recentSales) {
+    summaryLines.push(`| ${sale.date} | ${sale.item} | ${sale.quantity} |`);
   }
   
   return summaryLines.join("\n");
