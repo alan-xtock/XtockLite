@@ -5,12 +5,8 @@ import { TrendingUp, Calendar, Target } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 export default function Analytics() {
-  // Fetch real analytics data from backend
-  const { data: analytics, isLoading } = useQuery({
-    queryKey: ['/api/analytics']
-  });
-
-  const { data: salesData } = useQuery({
+  // Fetch real sales data from backend
+  const { data: salesData, isLoading } = useQuery({
     queryKey: ['/api/sales-data']
   });
 

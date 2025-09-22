@@ -56,51 +56,9 @@ export class MemStorage implements IStorage {
     this.forecasts = new Map();
     this.purchaseOrders = new Map();
     this.suppliers = new Map();
-    
-    // Initialize default suppliers synchronously
-    this.initializeDefaultSuppliers();
-  }
-
-  private initializeDefaultSuppliers() {
-    const defaultSuppliers = [
-      {
-        name: "Green Valley Farms",
-        whatsappNumber: "+1234567890",
-        email: "orders@greenvalleyfarms.com",
-        specialties: ["tomatoes", "lettuce", "peppers", "organic"],
-        averageResponseTime: 2,
-        isActive: true
-      },
-      {
-        name: "Fresh Harvest Co",
-        whatsappNumber: "+1234567891", 
-        email: "supply@freshharvest.com",
-        specialties: ["carrots", "onions", "potatoes", "root vegetables"],
-        averageResponseTime: 3,
-        isActive: true
-      },
-      {
-        name: "Organic Depot",
-        whatsappNumber: "+1234567892",
-        email: "orders@organicdepot.com", 
-        specialties: ["bell peppers", "cucumbers", "herbs", "organic"],
-        averageResponseTime: 4,
-        isActive: true
-      }
-    ];
-
-    for (const supplier of defaultSuppliers) {
-      const id = randomUUID();
-      const supplierRecord: Supplier = {
-        ...supplier,
-        id,
-        createdAt: new Date(),
-      };
-      this.suppliers.set(id, supplierRecord);
-    }
-    
     this.initialized = true;
   }
+
 
   // Sales data operations
   async insertSalesData(data: InsertSalesData[]): Promise<SalesData[]> {
