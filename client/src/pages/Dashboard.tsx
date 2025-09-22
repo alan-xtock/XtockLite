@@ -58,18 +58,18 @@ export default function Dashboard() {
   });
 
   const handleUploadStart = () => {
-    setIsGeneratingForecast(true);
+    // Don't set generating forecast during upload
+    // Only set it when user clicks the forecast button
   };
 
   const handleFileUpload = (result: any) => {
     console.log('Upload completed:', result);
     setUploadResult(result);
     setHasUploadedFile(true);
+    setIsGeneratingForecast(false); // Ensure button is visible after upload
     
-    // Auto-generate forecasts after successful upload
-    setTimeout(() => {
-      handleGenerateForecast();
-    }, 1000);
+    // Don't auto-generate forecasts - let user click the button instead
+    // This prevents getting stuck in generating state
   };
 
   const handleGenerateForecast = () => {
