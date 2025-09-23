@@ -45,6 +45,11 @@ function ThemeToggle() {
 
 function MainApp() {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [, setLocation] = useLocation();
+
+  const handleReturnHome = () => {
+    setLocation("/");
+  };
 
   const renderPage = () => {
     switch (activeTab) {
@@ -63,6 +68,18 @@ function MainApp() {
 
   return (
     <div className="relative">
+      {/* Header with Home Button */}
+      <header className="bg-white border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+        <h1 className="text-lg font-semibold text-gray-900">XtockLite</h1>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handleReturnHome}
+          data-testid="button-return-home"
+        >
+          Home
+        </Button>
+      </header>
       {renderPage()}
       <NavigationTabs 
         activeTab={activeTab} 

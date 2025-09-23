@@ -41,10 +41,9 @@ export default function Landing({ onGetStarted }: LandingProps) {
               <div className="bg-green-100 rounded-lg p-3 max-w-xs">
                 <div className="font-semibold text-green-800 mb-2">Tomorrow's Order</div>
                 <div className="text-sm space-y-1 text-green-700">
-                  <div>• Tomatoes: 15 lbs ($45)</div>
-                  <div>• Lettuce: 8 heads ($32)</div>
-                  <div>• Onions: 12 lbs ($18)</div>
-                  <div className="border-t pt-2 font-semibold">Total: $95</div>
+                  <div>• Tomatoes: 15 lbs</div>
+                  <div>• Lettuce: 8 heads</div>
+                  <div>• Onions: 12 lbs</div>
                 </div>
               </div>
               <div className="flex gap-2">
