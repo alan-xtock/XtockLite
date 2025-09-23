@@ -23,7 +23,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
             <Button 
               onClick={onGetStarted}
               size="lg" 
-              className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-8 py-4 text-lg"
+              className="bg-orange-500 text-white font-semibold px-8 py-4 text-lg"
               data-testid="button-get-early-access"
             >
               Get Early Access
@@ -39,7 +39,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
             <div className="bg-white p-4 space-y-3">
               <div className="text-sm text-gray-500">Today, 6:00 AM</div>
               <div className="bg-green-100 rounded-lg p-3 max-w-xs">
-                <div className="font-semibold text-green-800 mb-2">📋 Tomorrow's Order</div>
+                <div className="font-semibold text-green-800 mb-2">Tomorrow's Order</div>
                 <div className="text-sm space-y-1 text-green-700">
                   <div>• Tomatoes: 15 lbs ($45)</div>
                   <div>• Lettuce: 8 heads ($32)</div>
@@ -48,10 +48,18 @@ export default function Landing({ onGetStarted }: LandingProps) {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white">
-                  ✓ Approve
+                <Button 
+                  size="sm" 
+                  className="bg-green-500 text-white"
+                  data-testid="button-whatsapp-approve"
+                >
+                  Approve
                 </Button>
-                <Button size="sm" variant="outline">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  data-testid="button-whatsapp-edit"
+                >
                   Edit
                 </Button>
               </div>
@@ -165,7 +173,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
         <Button 
           onClick={onGetStarted}
           size="lg" 
-          className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-8 py-4 text-lg"
+          className="bg-orange-500 text-white font-semibold px-8 py-4 text-lg"
           data-testid="button-get-early-access-mid"
         >
           Get Early Access Today
@@ -199,7 +207,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
           <Button 
             onClick={onGetStarted}
             size="lg" 
-            className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-8 py-4 text-lg"
+            className="bg-orange-500 text-white font-semibold px-8 py-4 text-lg"
             data-testid="button-join-pilot"
           >
             Join the Pilot
