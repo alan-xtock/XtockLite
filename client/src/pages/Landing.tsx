@@ -17,7 +17,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
               <span className="text-blue-800">More Peace of Mind.</span>
             </h1>
             <p className="text-xl text-gray-600 leading-relaxed">
-              XtockLite predicts tomorrow's produce needs and sends a ready-to-approve 
+              XtockLite predicts tomorrow's inventory needs and sends a ready-to-approve 
               purchase order every morning via WhatsApp.
             </p>
             <Button 
