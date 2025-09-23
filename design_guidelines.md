@@ -13,7 +13,16 @@ Drawing inspiration from Notion and Linear for clean, minimal interfaces with st
 ## Core Design Elements
 
 ### A. Color Palette
-**Primary Colors:**
+
+**Landing Page Colors:**
+- Primary: 225 85% 25% (dark blue)
+- Orange Accent: 25 85% 55% (call-to-action buttons)
+- Green Highlight: 142 70% 45% (trust indicators, success states)
+- Background: 0 0% 100% (white)
+- Text Primary: 220 15% 15% (dark gray)
+- Text Secondary: 220 10% 40% (medium gray)
+
+**App Interface Colors (Dark Mode):**
 - Dark Blue: 225 85% 25% (primary brand)
 - Dark Blue Light: 225 75% 35% (secondary)
 - Dark Blue Dark: 225 90% 15% (deep accents)
