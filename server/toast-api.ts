@@ -94,7 +94,7 @@ export class ToastApiService {
     }
   }
 
-  async makeApiCall(endpoint: string, options: RequestInit = {}): Promise<any> {
+  async makeApiCall(endpoint: string, options: RequestInit = {}, additionalHeaders: Record<string, string> = {}): Promise<any> {
     await this.authenticate();
 
     if (this.config.mockMode) {
@@ -105,6 +105,7 @@ export class ToastApiService {
       ...options,
       headers: {
         ...options.headers,
+        ...additionalHeaders,
         "Authorization": `Bearer ${this.accessToken}`,
         "Content-Type": "application/json",
       },
@@ -153,7 +154,136 @@ export class ToastApiService {
       };
     }
 
+    if (endpoint.includes('/orders/v2/ordersBulk')) {
+      return this.generateMockOrders();
+    }
+
     return { message: `Mock response for ${endpoint}`, timestamp: new Date().toISOString() };
+  }
+
+  async getOrdersBulk(restaurantId: string, options: {
+    startDate?: string;
+    endDate?: string;
+    businessDate?: string;
+    pageSize?: number;
+    page?: number;
+  } = {}): Promise<any> {
+    const queryParams = new URLSearchParams();
+
+    if (options.startDate) queryParams.append('startDate', options.startDate);
+    if (options.endDate) queryParams.append('endDate', options.endDate);
+    if (options.businessDate) queryParams.append('businessDate', options.businessDate);
+    if (options.pageSize) queryParams.append('pageSize', options.pageSize.toString());
+    if (options.page) queryParams.append('page', options.page.toString());
+
+    const endpoint = `/orders/v2/ordersBulk${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+    return this.makeApiCall(endpoint, { method: 'GET' }, {
+      'Toast-Restaurant-External-Id': restaurantId
+    });
+  }
+
+  private generateMockOrders(): any[] {
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    return [
+      {
+        guid: "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+        diningOption: { name: "Take Out" },
+        createdDate: yesterday.toISOString(),
+        paidDate: new Date(yesterday.getTime() + 5 * 60 * 1000).toISOString(),
+        checks: [
+          {
+            guid: "b2c3d4e5-f6a7-8901-2345-67890abcdef1",
+            selections: [
+              {
+                item: { name: "Classic Burger" },
+                quantity: 1,
+                unitPrice: 1450,
+                modifiers: []
+              },
+              {
+                item: { name: "Fries" },
+                quantity: 1,
+                unitPrice: 400,
+                modifiers: []
+              }
+            ],
+            payments: [
+              {
+                type: "CREDIT",
+                amount: 1850
+              }
+            ]
+          }
+        ]
+      },
+      {
+        guid: "b2c3d4e5-f6a7-8901-2345-67890abcdef",
+        diningOption: { name: "Dine In" },
+        createdDate: yesterday.toISOString(),
+        paidDate: new Date(yesterday.getTime() + 45 * 60 * 1000).toISOString(),
+        checks: [
+          {
+            guid: "c3d4e5f6-a7b8-9012-3456-7890abcdef12",
+            selections: [
+              {
+                item: { name: "Caesar Salad" },
+                quantity: 1,
+                unitPrice: 1200,
+                modifiers: [
+                  { name: "Add Chicken" }
+                ]
+              },
+              {
+                item: { name: "Iced Tea" },
+                quantity: 1,
+                unitPrice: 350,
+                modifiers: []
+              }
+            ],
+            payments: [
+              {
+                type: "CASH",
+                amount: 1550
+              }
+            ]
+          }
+        ]
+      },
+      {
+        guid: "c3d4e5f6-a7b8-9012-3456-7890abcdef",
+        diningOption: { name: "Delivery" },
+        createdDate: now.toISOString(),
+        paidDate: new Date(now.getTime() + 10 * 60 * 1000).toISOString(),
+        checks: [
+          {
+            guid: "d4e5f6a7-b8c9-0123-4567-890abcdef123",
+            selections: [
+              {
+                item: { name: "Margherita Pizza" },
+                quantity: 2,
+                unitPrice: 1600,
+                modifiers: []
+              },
+              {
+                item: { name: "Garlic Bread" },
+                quantity: 1,
+                unitPrice: 650,
+                modifiers: []
+              }
+            ],
+            payments: [
+              {
+                type: "CREDIT",
+                amount: 3850
+              }
+            ]
+          }
+        ]
+      }
+    ];
   }
 }
 
