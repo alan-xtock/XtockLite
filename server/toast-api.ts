@@ -1,4 +1,3 @@
-import { z } from "zod";
 
 interface ToastTokenResponse {
   access_token: string;
@@ -96,7 +95,7 @@ export class ToastApiService {
   }
 
   async makeApiCall(endpoint: string, options: RequestInit = {}): Promise<any> {
-    const token = await this.authenticate();
+    await this.authenticate();
 
     if (this.config.mockMode) {
       return this.mockApiCall(endpoint, options);
@@ -106,7 +105,7 @@ export class ToastApiService {
       ...options,
       headers: {
         ...options.headers,
-        "Authorization": `Bearer ${token}`,
+        "Authorization": `Bearer ${this.accessToken}`,
         "Content-Type": "application/json",
       },
     });
