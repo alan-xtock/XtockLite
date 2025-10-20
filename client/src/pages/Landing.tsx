@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { CheckCircle, MessageSquare, Shield, Upload, Eye, Send } from "lucide-react";
+import { useMessaging } from "@/hooks/useMessaging";
 
 interface LandingProps {
   onGetStarted: () => void;
 }
 
 export default function Landing({ onGetStarted }: LandingProps) {
+  const { isApproving, handleApprove } = useMessaging();
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -47,12 +49,14 @@ export default function Landing({ onGetStarted }: LandingProps) {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="bg-green-500 text-white"
                   data-testid="button-whatsapp-approve"
+                  onClick={handleApprove}
+                  disabled={isApproving}
                 >
-                  Approve
+                  {isApproving ? 'Sending...' : 'Approve'}
                 </Button>
                 <Button 
                   size="sm" 
