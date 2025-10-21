@@ -58,4 +58,44 @@ export function registerMessagingRoutes(app: Express) {
       });
     }
   });
+
+  // Webhook endpoint for incoming WhatsApp messages
+  app.post('/api/messaging/webhook', async (req, res) => {
+    try {
+      console.log('Received WhatsApp webhook:', req.body);
+
+      const { From, Body, MessageSid } = req.body;
+
+      if (From && Body) {
+        console.log(`Received message from ${From}: ${Body}`);
+
+        if (!twilioService) {
+          console.error('Twilio service not configured for webhook response');
+          return res.status(200).send('OK'); // Still respond OK to Twilio
+        }
+
+        // Send a free-form follow-up message
+        const dummyMessage = "Thanks for your response! Here's some additional information about your order. We'll process this shortly and get back to you.";
+
+        // Extract phone number (remove whatsapp: prefix if present)
+        const phoneNumber = From.replace('whatsapp:', '');
+
+        const result = await twilioService.sendFreeFormMessage(phoneNumber, dummyMessage);
+
+        if (result.success) {
+          console.log('Follow-up message sent successfully');
+        } else {
+          console.error('Failed to send follow-up message:', result.error);
+        }
+      }
+
+      // Always respond with 200 OK to Twilio
+      res.status(200).send('OK');
+
+    } catch (error) {
+      console.error('Webhook error:', error);
+      // Still respond OK to prevent Twilio from retrying
+      res.status(200).send('OK');
+    }
+  });
 }
