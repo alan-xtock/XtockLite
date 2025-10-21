@@ -68,8 +68,26 @@ export function createTwilioService() {
     }
   };
 
+  const sendFreeFormMessage = async (to: string, body: string) => {
+    try {
+      const message = await client.messages
+        .create({
+          body,
+          from: `whatsapp:${fromNumber}`,
+          to: `whatsapp:${to}`
+        });
+
+      console.log(`Free-form WhatsApp message sent: ${message.sid}`);
+      return { success: true, messageSid: message.sid };
+    } catch (error) {
+      console.error('Free-form WhatsApp message error:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  };
+
   return {
     sendMessage,
-    sendWhatsAppMessage
+    sendWhatsAppMessage,
+    sendFreeFormMessage
   };
 }
