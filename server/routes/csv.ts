@@ -5,6 +5,7 @@ import { storage } from "../storage";
 import { enhancedInsertSalesDataSchema } from "@shared/schema";
 import { z } from "zod";
 import { csvColumnSchema, parseCsvRow, validateRequiredFields } from "./csv-utils";
+import { generateDummySalesData } from "../dummy-data";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -23,6 +24,24 @@ const upload = multer({
 export function registerCsvRoutes(app: Express) {
   app.post('/api/upload-csv', upload.single('csvFile'), async (req, res) => {
     try {
+      // Check if we should use dummy data
+      if (process.env.USE_DUMMY_DATA === 'true') {
+        console.log('Using dummy data instead of CSV upload');
+
+        const dummyData = generateDummySalesData();
+        const insertedData = await storage.insertSalesData(dummyData);
+
+        return res.json({
+          success: true,
+          message: `Successfully processed ${insertedData.length} dummy sales records`,
+          totalRows: dummyData.length,
+          validRows: insertedData.length,
+          errors: undefined,
+          totalErrors: 0,
+          dummyDataUsed: true
+        });
+      }
+
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
       }

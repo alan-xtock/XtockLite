@@ -7,4 +7,4 @@ export type { IStorage };
 export { MemStorage, DatabaseStorage };
 
 // Storage factory - uses database storage when DATABASE_URL is available, otherwise falls back to memory storage
-export const storage: IStorage = process.env.DATABASE_URL ? new DatabaseStorage() : new MemStorage();
+export const storage: IStorage = process.env.DATABASE_URL && process.env.USE_DATABASE ? new DatabaseStorage() : new MemStorage();

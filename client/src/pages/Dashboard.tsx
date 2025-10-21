@@ -7,8 +7,9 @@ import StatsCard from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RefreshCw, Sun, Cloud, CloudRain, Key } from "lucide-react";
+import { RefreshCw, Sun, Cloud, CloudRain, Key, Upload } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +21,7 @@ export default function Dashboard() {
   const [uploadResult, setUploadResult] = useState<any>(null);
   const [isGeneratingForecast, setIsGeneratingForecast] = useState(false);
   const [selectedWeather, setSelectedWeather] = useState<"sunny" | "cloudy" | "rainy">("cloudy");
+  const [activeTab, setActiveTab] = useState("csv");
   const [toastApiKey, setToastApiKey] = useState("");
   const [isConnectingToast, setIsConnectingToast] = useState(false);
   const [isToastConnected, setIsToastConnected] = useState(false);
@@ -138,7 +140,8 @@ export default function Dashboard() {
         setUploadResult({
           validRows: dummySalesData.length,
           totalRows: dummySalesData.length,
-          errors: []
+          errors: [],
+          toastDataUsed: true
         });
 
         // Automatically show forecasts
@@ -165,6 +168,7 @@ export default function Dashboard() {
     }
   };
 
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
@@ -182,96 +186,116 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <div className="p-4 space-y-6">
-        {/* Stats Overview - Only show when we have Toast connected */}
-        {isToastConnected && (
+        {/* Stats Overview - Only show when we have real data */}
+        {(hasUploadedFile || isToastConnected) && salesData && (
           <div className="grid grid-cols-2 gap-4">
             <DashboardCard
               title="Items Tracked"
-              value={uploadResult?.validRows?.toString() || '5'}
-              subtitle="Items from Toast"
+              value={Array.isArray(salesData) ? salesData.length.toString() : '0'}
+              subtitle="Sales records uploaded"
               trend={0}
               variant="accent"
             />
             <DashboardCard
-              title="Toast Connected"
+              title="Ready for AI"
               value="✓"
-              subtitle="Ready for forecasting"
+              subtitle="Data processed successfully"
               trend={0}
             />
           </div>
         )}
 
-        {/* Welcome Section - Show when no Toast connection */}
-        {!isToastConnected && (
+        {/* Welcome Section - Show when no data uploaded */}
+        {!hasUploadedFile && !isToastConnected && (
           <div className="text-center py-8 space-y-6">
             <div className="space-y-3">
               <h2 className="text-2xl font-bold text-foreground">
                 Welcome to XtockLite
               </h2>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Connect your Toast account to start reducing produce costs with AI-powered forecasting.
+                Connect your data source to start reducing produce costs with AI-powered forecasting.
               </p>
             </div>
           </div>
         )}
 
-        {/* Toast API Connection Section */}
-        {!isToastConnected && (
-          <div data-testid="toast-connection-section" className="space-y-4">
-            <h2 className="text-lg font-semibold mb-3 text-foreground">
-              Connect to Toast
-            </h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              Enter your Toast API key to import sales data and generate forecasts automatically.
-            </p>
-            <div className="max-w-md mx-auto space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="toast-api-key">Toast API Key</Label>
-                <div className="relative">
-                  <Key className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="toast-api-key"
-                    type="password"
-                    placeholder="Enter your Toast API key"
-                    value={toastApiKey}
-                    onChange={(e) => setToastApiKey(e.target.value)}
-                    className="pl-10"
-                    disabled={isConnectingToast}
+        {/* Data Source Selection Tabs */}
+        {!hasUploadedFile && !isToastConnected && (
+          <div className="max-w-2xl mx-auto">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="csv" className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  CSV Upload
+                </TabsTrigger>
+                <TabsTrigger value="toast" className="flex items-center gap-2">
+                  <Key className="h-4 w-4" />
+                  Toast POS
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="csv" className="mt-6">
+                <div data-testid="upload-section" className="space-y-4">
+                  <div className="text-center space-y-2">
+                    <h2 className="text-lg font-semibold text-foreground">
+                      Upload Your Sales Data
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Upload a CSV file with your sales history. Include columns for date, item, quantity, unit, and price.
+                    </p>
+                  </div>
+                  <UploadArea
+                    onFileUpload={handleFileUpload}
+                    onUploadStart={handleUploadStart}
                   />
                 </div>
-              </div>
-              <Button
-                onClick={handleConnectToast}
-                disabled={isConnectingToast || !toastApiKey.trim()}
-                className="w-full"
-                data-testid="button-connect-toast"
-              >
-                {isConnectingToast ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Connecting to Toast...
-                  </>
-                ) : (
-                  "Connect to Toast"
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
+              </TabsContent>
 
-        {/* Upload Section - Now hidden since Toast connection replaces it */}
-        {!hasUploadedFile && isToastConnected && (
-          <div data-testid="upload-section" className="hidden">
-            <h2 className="text-lg font-semibold mb-3 text-foreground">
-              Upload Your Sales Data
-            </h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              Upload a CSV file with your sales history. Include columns for date, item, quantity, unit, and price.
-            </p>
-            <UploadArea
-              onFileUpload={handleFileUpload}
-              onUploadStart={handleUploadStart}
-            />
+              <TabsContent value="toast" className="mt-6">
+                <div data-testid="toast-connection-section" className="space-y-4">
+                  <div className="text-center space-y-2">
+                    <h2 className="text-lg font-semibold text-foreground">
+                      Connect to Toast POS
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Enter your Toast API key to import sales data and generate forecasts automatically.
+                    </p>
+                  </div>
+                  <div className="max-w-md mx-auto space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="toast-api-key">Toast API Key</Label>
+                      <div className="relative">
+                        <Key className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="toast-api-key"
+                          type="password"
+                          placeholder="Enter your Toast API key"
+                          value={toastApiKey}
+                          onChange={(e) => setToastApiKey(e.target.value)}
+                          className="pl-10"
+                          disabled={isConnectingToast}
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleConnectToast}
+                      disabled={isConnectingToast || !toastApiKey.trim()}
+                      className="w-full"
+                      data-testid="button-connect-toast"
+                    >
+                      {isConnectingToast ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Connecting to Toast...
+                        </>
+                      ) : (
+                        "Connect to Toast"
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         )}
 
@@ -288,27 +312,45 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Toast Connection Summary */}
-        {isToastConnected && uploadResult && (
+        {/* Data Import Summary */}
+        {(hasUploadedFile || isToastConnected) && uploadResult && (
           <div>
             <h2 className="text-lg font-semibold mb-3 text-foreground">
-              Toast Connection Summary
+              {uploadResult.toastDataUsed ? "Toast Connection Summary" : "Data Upload Summary"}
             </h2>
             <div className="grid grid-cols-2 gap-4">
               <DashboardCard
                 title="Records Processed"
-                value={uploadResult.validRows?.toString() || "5"}
-                subtitle={`items imported from Toast`}
-                trend={5}
+                value={uploadResult.validRows?.toString() || "0"}
+                subtitle={uploadResult.toastDataUsed ? "items from Toast POS" : `from ${uploadResult.totalRows || 0} total rows`}
+                trend={uploadResult.errors?.length > 0 ? -((uploadResult.errors.length / uploadResult.totalRows) * 100) : 5}
               />
               <DashboardCard
                 title="Data Quality"
-                value="100%"
-                subtitle="Toast integration success"
+                value={uploadResult.toastDataUsed ? "100%" : `${Math.round(((uploadResult.validRows || 0) / (uploadResult.totalRows || 1)) * 100)}%`}
+                subtitle={uploadResult.toastDataUsed ? "Toast integration success" : "validation success rate"}
                 trend={5}
                 variant="accent"
               />
             </div>
+            {uploadResult.dummyDataUsed && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center text-blue-800">
+                  <div className="text-sm font-medium">
+                    🧪 Demo Mode: Using sample sales data for demonstration purposes
+                  </div>
+                </div>
+              </div>
+            )}
+            {uploadResult.toastDataUsed && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center text-green-800">
+                  <div className="text-sm font-medium">
+                    ✅ Toast POS: Successfully connected and imported sales data
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -373,7 +415,7 @@ export default function Dashboard() {
         )}
 
         {/* Weather Selector & Generate Forecast Button */}
-        {isToastConnected && !isGeneratingForecast && (
+        {(hasUploadedFile || isToastConnected) && !isGeneratingForecast && (
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center gap-4">
               <span className="text-sm font-medium text-muted-foreground">Weather for tomorrow:</span>
