@@ -1,8 +1,8 @@
-import ForecastCard from "@/components/ForecastCard";
 import OrderCard from "@/components/OrderCard";
 import DataSourceTabs from "@/components/DataSourceTabs";
 import { DashboardOverview, DataImportSummary } from "@/components/DashboardStats";
 import WeatherForecastControls from "@/components/WeatherForecastControls";
+import ForecastSection from "@/components/ForecastSection";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -110,35 +110,13 @@ export default function Dashboard() {
         />
 
         {/* Forecast Section */}
-        {showForecast && (
-          <div data-testid="forecast-section">
-            <h2 className="text-lg font-semibold mb-3 text-foreground">
-              Next-Day Sales Forecast
-            </h2>
-            {(() => {
-              // Extract the actual forecast array from the API response
-              const forecastArray = (forecasts as any)?.forecasts || [];
-              // Use the currently selected weather instead of API response to avoid stale data
-              const weather = selectedWeather;
-
-              return Array.isArray(forecastArray) && forecastArray.length > 0 ? (
-                <ForecastCard
-                  date="Tomorrow"
-                  items={forecastArray.map((item: any) => ({
-                    item: item.item,
-                    predictedQuantity: item.predictedQuantity
-                  }))}
-                  weather={weather}
-                  onGenerateOrder={handleGenerateOrder}
-                />
-              ) : (
-                <div className="text-center py-4 text-muted-foreground">
-                  {forecastsLoading ? 'Loading forecasts...' : 'No forecast data available'}
-                </div>
-              );
-            })()}
-          </div>
-        )}
+        <ForecastSection
+          showForecast={showForecast}
+          forecasts={forecasts}
+          forecastsLoading={forecastsLoading}
+          selectedWeather={selectedWeather}
+          onGenerateOrder={handleGenerateOrder}
+        />
 
         {/* Order Section */}
         {showOrder && (forecasts as any)?.forecasts && Array.isArray((forecasts as any).forecasts) && (
