@@ -23,6 +23,7 @@ export interface IStorage {
   getForecasts(limit?: number): Promise<Forecast[]>;
   getForecastsByDate(date: Date): Promise<Forecast[]>;
   getLatestForecast(): Promise<Forecast | undefined>;
+  clearForecasts(): Promise<void>;
 
   // Purchase order operations
   createPurchaseOrder(order: InsertPurchaseOrder): Promise<PurchaseOrder>;

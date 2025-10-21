@@ -32,6 +32,10 @@ export function registerForecastRoutes(app: Express) {
 
       console.log(`Grouped into ${Object.keys(itemGroups).length} items`);
 
+      // Clear existing forecasts before generating new ones
+      await storage.clearForecasts();
+      console.log('Cleared existing forecasts');
+
       const forecasts = [];
       const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -100,6 +104,10 @@ export function registerForecastRoutes(app: Express) {
           message: 'Please upload sales data first before generating forecasts'
         });
       }
+
+      // Clear existing forecasts before generating new ones
+      await storage.clearForecasts();
+      console.log('Cleared existing forecasts');
 
       const forecastResults = await generateForecasts({
         salesData,

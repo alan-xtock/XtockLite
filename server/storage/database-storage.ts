@@ -102,6 +102,10 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async clearForecasts(): Promise<void> {
+    await this.db.delete(forecasts);
+  }
+
   // Purchase order operations
   async createPurchaseOrder(order: InsertPurchaseOrder): Promise<PurchaseOrder> {
     const result = await this.db.insert(purchaseOrders).values(order).returning();

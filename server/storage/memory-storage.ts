@@ -112,6 +112,10 @@ export class MemStorage implements IStorage {
     return forecasts[0];
   }
 
+  async clearForecasts(): Promise<void> {
+    this.forecasts.clear();
+  }
+
   // Purchase order operations
   async createPurchaseOrder(order: InsertPurchaseOrder): Promise<PurchaseOrder> {
     // Validate the order data
