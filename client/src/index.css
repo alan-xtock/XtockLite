@@ -76,6 +76,13 @@
   --chart-4: 142 60% 55%;
   --chart-5: 225 90% 15%;
 
+  /* Custom Brand Colors */
+  --growth-green: 142 71% 40%;  /* #23A956 */
+  --mint-accent: 142 50% 91%;   /* #DCF1E3 */
+  --charcoal: 240 6% 10%;       /* #19191C */
+  --off-white: 220 43% 99%;     /* #FAFBFD */
+  --light-grey: 240 5% 95%;     /* #F1F1F5 */
+
   --font-sans: Open Sans, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
@@ -194,6 +201,13 @@
   --chart-3: 225 75% 35%;
   --chart-4: 142 60% 55%;
   --chart-5: 225 90% 15%;
+
+  /* Custom Brand Colors - Dark Mode */
+  --growth-green: 142 71% 40%;  /* #23A956 */
+  --mint-accent: 142 50% 91%;   /* #DCF1E3 */
+  --charcoal: 240 6% 10%;       /* #19191C */
+  --off-white: 220 43% 99%;     /* #FAFBFD */
+  --light-grey: 240 5% 95%;     /* #F1F1F5 */
 
   --shadow-2xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);

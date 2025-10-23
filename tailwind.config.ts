@@ -81,6 +81,12 @@ export default {
           busy: "rgb(239 68 68)",
           offline: "rgb(156 163 175)",
         },
+        // Custom Brand Colors
+        "growth-green": "hsl(var(--growth-green) / <alpha-value>)",
+        "mint-accent": "hsl(var(--mint-accent) / <alpha-value>)",
+        "charcoal": "hsl(var(--charcoal) / <alpha-value>)",
+        "off-white": "hsl(var(--off-white) / <alpha-value>)",
+        "light-grey": "hsl(var(--light-grey) / <alpha-value>)",
       },
       fontFamily: {
         sans: ["var(--font-sans)"],

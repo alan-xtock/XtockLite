@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Home, ShoppingCart, TrendingUp, Settings } from "lucide-react";
+import { Home, ShoppingCart, TrendingUp, Settings, FileBarChart } from "lucide-react";
 
 interface NavigationTabsProps {
   activeTab?: string;
@@ -11,6 +11,7 @@ const tabs = [
   { id: "dashboard", label: "Dashboard", icon: Home },
   { id: "orders", label: "Orders", icon: ShoppingCart },
   { id: "analytics", label: "Analytics", icon: TrendingUp },
+  { id: "forecastreport", label: "Forecast", icon: FileBarChart },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 

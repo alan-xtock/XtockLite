@@ -11,6 +11,7 @@ import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import Orders from "@/pages/Orders";
 import Analytics from "@/pages/Analytics";
+import ForecastReport from "@/pages/ForecastReport";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
@@ -59,6 +60,8 @@ function MainApp() {
         return <Orders />;
       case "analytics":
         return <Analytics />;
+      case "forecastreport":
+        return <ForecastReport />;
       case "settings":
         return <Settings />;
       default:
