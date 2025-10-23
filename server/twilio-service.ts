@@ -19,6 +19,7 @@ export function createTwilioService() {
 
   const sendMessage = async (to: string, body: string) => {
     try {
+      console.log("toNumber", to)
       const message = await client.messages
         .create({
           body,
@@ -39,9 +40,11 @@ export function createTwilioService() {
   const sendWhatsAppMessage = async (to: string, body: string, contentSid?: string, contentVariables?: string) => {
     try {
       contentSid = process.env.TWILIO_CONTENT_SID;
-      contentVariables = '{"1":"12/1","2":"3pm"}';
+      const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
+      contentVariables = '{"1":"Alan","2":"01/01"}';
       const messageOptions: any = {
-        from: `whatsapp:${fromNumber}`,
+        messagingServiceSid,
+        contentSid,
         to: `whatsapp:${to}`
       };
 
@@ -51,6 +54,7 @@ export function createTwilioService() {
           messageOptions.contentVariables = contentVariables;
         }
       } else {
+        console.log("No contentSid found. Attempting to send freeform body:", body);
         messageOptions.body = body;
       }
 
