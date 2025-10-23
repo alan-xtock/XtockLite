@@ -14,67 +14,67 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 220 8% 95%;
+  --background: 220 43% 99%;  /* Off-White */
 
-  --foreground: 220 10% 15%;
+  --foreground: 240 6% 10%;  /* Charcoal */
 
-  --border: 220 13% 91%;
+  --border: 240 5% 91%;
 
-  --card: 220 4% 98%;
+  --card: 0 0% 100%;  /* White */
 
-  --card-foreground: 220 10% 15%;
+  --card-foreground: 240 6% 10%;  /* Charcoal */
 
-  --card-border: 220 13% 88%;
+  --card-border: 240 5% 88%;
 
-  --sidebar: 220 6% 96%;
+  --sidebar: 240 5% 95%;  /* Light Grey */
 
-  --sidebar-foreground: 220 10% 15%;
+  --sidebar-foreground: 240 6% 10%;  /* Charcoal */
 
-  --sidebar-border: 220 13% 91%;
+  --sidebar-border: 240 5% 91%;
 
-  --sidebar-primary: 225 85% 25%;
+  --sidebar-primary: 142 71% 40%;  /* Growth Green */
 
-  --sidebar-primary-foreground: 220 5% 95%;
+  --sidebar-primary-foreground: 0 0% 100%;  /* White */
 
-  --sidebar-accent: 220 10% 88%;
+  --sidebar-accent: 142 50% 91%;  /* Mint Accent */
 
-  --sidebar-accent-foreground: 220 10% 15%;
+  --sidebar-accent-foreground: 240 6% 10%;  /* Charcoal */
 
-  --sidebar-ring: 225 85% 25%;
+  --sidebar-ring: 142 71% 40%;  /* Growth Green */
 
-  --popover: 220 4% 98%;
+  --popover: 0 0% 100%;  /* White */
 
-  --popover-foreground: 220 10% 15%;
+  --popover-foreground: 240 6% 10%;  /* Charcoal */
 
-  --popover-border: 220 13% 88%;
+  --popover-border: 240 5% 88%;
 
-  --primary: 225 85% 25%;
+  --primary: 142 71% 40%;  /* Growth Green */
 
-  --primary-foreground: 220 5% 95%;
+  --primary-foreground: 0 0% 100%;  /* White */
 
-  --secondary: 220 8% 91%;
+  --secondary: 142 50% 91%;  /* Mint Accent */
 
-  --secondary-foreground: 220 10% 15%;
+  --secondary-foreground: 240 6% 10%;  /* Charcoal */
 
-  --muted: 220 8% 95%;
+  --muted: 240 5% 95%;  /* Light Grey */
 
-  --muted-foreground: 220 5% 45%;
+  --muted-foreground: 240 6% 45%;
 
-  --accent: 142 70% 45%;
+  --accent: 142 71% 40%;  /* Growth Green */
 
-  --accent-foreground: 220 5% 95%;
+  --accent-foreground: 0 0% 100%;  /* White */
 
   --destructive: 0 84% 60%;
 
   --destructive-foreground: 220 5% 95%;
 
-  --input: 220 13% 88%;
-  --ring: 225 85% 25%;
-  --chart-1: 225 85% 25%;
-  --chart-2: 142 70% 45%;
-  --chart-3: 225 75% 35%;
-  --chart-4: 142 60% 55%;
-  --chart-5: 225 90% 15%;
+  --input: 240 5% 88%;
+  --ring: 142 71% 40%;  /* Growth Green */
+  --chart-1: 142 71% 40%;  /* Growth Green */
+  --chart-2: 142 50% 91%;  /* Mint Accent */
+  --chart-3: 142 71% 30%;  /* Darker Growth Green */
+  --chart-4: 142 50% 60%;  /* Medium Green */
+  --chart-5: 240 6% 10%;  /* Charcoal */
 
   /* Custom Brand Colors */
   --growth-green: 142 71% 40%;  /* #23A956 */
@@ -139,68 +139,68 @@
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
 
-  --background: 220 15% 8%;
+  --background: 240 6% 10%;  /* Dark Charcoal */
 
-  --foreground: 220 5% 95%;
+  --foreground: 220 43% 99%;  /* Off-White */
 
-  --border: 220 12% 18%;
+  --border: 240 5% 25%;
 
-  --card: 220 12% 12%;
+  --card: 240 5% 15%;
 
-  --card-foreground: 220 5% 95%;
+  --card-foreground: 220 43% 99%;  /* Off-White */
 
-  --card-border: 220 12% 20%;
+  --card-border: 240 5% 30%;
 
-  --sidebar: 220 15% 10%;
+  --sidebar: 240 5% 15%;
 
-  --sidebar-foreground: 220 5% 95%;
+  --sidebar-foreground: 220 43% 99%;  /* Off-White */
 
-  --sidebar-border: 220 12% 18%;
+  --sidebar-border: 240 5% 25%;
 
-  --sidebar-primary: 225 85% 25%;
+  --sidebar-primary: 142 71% 40%;  /* Growth Green */
 
-  --sidebar-primary-foreground: 220 5% 95%;
+  --sidebar-primary-foreground: 0 0% 100%;  /* White */
 
-  --sidebar-accent: 220 12% 15%;
+  --sidebar-accent: 142 71% 25%;  /* Darker Growth Green */
 
-  --sidebar-accent-foreground: 220 5% 95%;
+  --sidebar-accent-foreground: 0 0% 100%;  /* White */
 
-  --sidebar-ring: 225 85% 25%;
+  --sidebar-ring: 142 71% 40%;  /* Growth Green */
 
-  --popover: 220 12% 12%;
+  --popover: 240 5% 15%;
 
-  --popover-foreground: 220 5% 95%;
+  --popover-foreground: 220 43% 99%;  /* Off-White */
 
-  --popover-border: 220 12% 20%;
+  --popover-border: 240 5% 30%;
 
-  --primary: 225 85% 25%;
+  --primary: 142 71% 40%;  /* Growth Green */
 
-  --primary-foreground: 220 5% 95%;
+  --primary-foreground: 0 0% 100%;  /* White */
 
-  --secondary: 220 12% 15%;
+  --secondary: 142 71% 25%;  /* Darker Growth Green */
 
-  --secondary-foreground: 220 5% 95%;
+  --secondary-foreground: 0 0% 100%;  /* White */
 
-  --muted: 220 12% 15%;
+  --muted: 240 5% 20%;
 
-  --muted-foreground: 220 5% 70%;
+  --muted-foreground: 220 43% 80%;
 
-  --accent: 142 70% 45%;
+  --accent: 142 71% 40%;  /* Growth Green */
 
-  --accent-foreground: 220 5% 95%;
+  --accent-foreground: 0 0% 100%;  /* White */
 
   --destructive: 0 84% 60%;
 
   --destructive-foreground: 220 5% 95%;
 
   /* Used as the border around inputs. Dark mode: Should be a border that is light enough to have high contrast when rendered on a --card background. More contrast than standard --border */
-  --input: 220 12% 25%;
-  --ring: 225 85% 25%;
-  --chart-1: 225 85% 25%;
-  --chart-2: 142 70% 45%;
-  --chart-3: 225 75% 35%;
-  --chart-4: 142 60% 55%;
-  --chart-5: 225 90% 15%;
+  --input: 240 5% 35%;
+  --ring: 142 71% 40%;  /* Growth Green */
+  --chart-1: 142 71% 45%;  /* Brighter Growth Green for dark mode */
+  --chart-2: 142 50% 75%;  /* Lighter Mint for dark mode */
+  --chart-3: 142 71% 35%;  /* Darker Growth Green */
+  --chart-4: 142 50% 60%;  /* Medium Green */
+  --chart-5: 220 43% 85%;  /* Light Grey for dark mode */
 
   /* Custom Brand Colors - Dark Mode */
   --growth-green: 142 71% 40%;  /* #23A956 */
