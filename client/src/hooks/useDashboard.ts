@@ -10,7 +10,7 @@ export function useDashboard() {
   const [uploadResult, setUploadResult] = useState<any>(null);
   const [isGeneratingForecast, setIsGeneratingForecast] = useState(false);
   const [selectedWeather, setSelectedWeather] = useState<"sunny" | "cloudy" | "rainy">("cloudy");
-  const [activeTab, setActiveTab] = useState("csv");
+  const [activeTab, setActiveTab] = useState("toast");
   const [toastApiKey, setToastApiKey] = useState("");
   const [isConnectingToast, setIsConnectingToast] = useState(false);
   const [isToastConnected, setIsToastConnected] = useState(false);

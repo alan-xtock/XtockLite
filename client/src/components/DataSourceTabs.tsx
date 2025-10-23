@@ -30,32 +30,15 @@ export default function DataSourceTabs({
     <div className="max-w-2xl mx-auto">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="csv" className="flex items-center gap-2">
-            <Upload className="h-4 w-4" />
-            CSV Upload
-          </TabsTrigger>
           <TabsTrigger value="toast" className="flex items-center gap-2">
             <Key className="h-4 w-4" />
             Toast POS
           </TabsTrigger>
+          <TabsTrigger value="csv" className="flex items-center gap-2">
+            <Upload className="h-4 w-4" />
+            CSV Upload
+          </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="csv" className="mt-6">
-          <div data-testid="upload-section" className="space-y-4">
-            <div className="text-center space-y-2">
-              <h2 className="text-lg font-semibold text-foreground">
-                Upload Your Sales Data
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Upload a CSV file with your sales history. Include columns for date, item, quantity, unit, and price.
-              </p>
-            </div>
-            <UploadArea
-              onFileUpload={onFileUpload}
-              onUploadStart={onUploadStart}
-            />
-          </div>
-        </TabsContent>
 
         <TabsContent value="toast" className="mt-6">
           <div data-testid="toast-connection-section" className="space-y-4">
@@ -99,6 +82,23 @@ export default function DataSourceTabs({
                 )}
               </Button>
             </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="csv" className="mt-6">
+          <div data-testid="upload-section" className="space-y-4">
+            <div className="text-center space-y-2">
+              <h2 className="text-lg font-semibold text-foreground">
+                Upload Your Sales Data
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Upload a CSV file with your sales history. Include columns for date, item, quantity, unit, and price.
+              </p>
+            </div>
+            <UploadArea
+              onFileUpload={onFileUpload}
+              onUploadStart={onUploadStart}
+            />
           </div>
         </TabsContent>
       </Tabs>
