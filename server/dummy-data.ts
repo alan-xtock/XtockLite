@@ -2,19 +2,18 @@ import type { InsertSalesData } from "@shared/schema";
 
 export function generateDummySalesData(): InsertSalesData[] {
   const items = [
-    { name: "Tomatoes", unit: "lbs", basePrice: 250, supplier: "Fresh Farms Co" },
-    { name: "Lettuce", unit: "heads", basePrice: 125, supplier: "Green Valley" },
-    { name: "Onions", unit: "lbs", basePrice: 180, supplier: "Fresh Farms Co" },
-    { name: "Carrots", unit: "lbs", basePrice: 150, supplier: "Organic Gardens" },
-    { name: "Bell Peppers", unit: "lbs", basePrice: 300, supplier: "Green Valley" },
-    { name: "Cucumbers", unit: "lbs", basePrice: 200, supplier: "Fresh Farms Co" },
-    { name: "Spinach", unit: "lbs", basePrice: 350, supplier: "Organic Gardens" },
-    { name: "Broccoli", unit: "lbs", basePrice: 280, supplier: "Green Valley" },
-    { name: "Mushrooms", unit: "lbs", basePrice: 450, supplier: "Specialty Produce" },
-    { name: "Avocados", unit: "each", basePrice: 75, supplier: "Specialty Produce" }
+    { name: "Crispy Brussels Sprouts", unit: "orders", basePrice: 1400, supplier: "Local Restaurant Supply", category: "Appetizers" },
+    { name: "Fried Calamari", unit: "orders", basePrice: 1400, supplier: "Seafood Distributors Inc", category: "Appetizers" },
+    { name: "Spinach Artichoke Dip", unit: "orders", basePrice: 1400, supplier: "Local Restaurant Supply", category: "Appetizers" },
+    { name: "House Burger", unit: "orders", basePrice: 1400, supplier: "Premium Meat Co", category: "Entrees" },
+    { name: "Grilled Salmon", unit: "orders", basePrice: 1400, supplier: "Seafood Distributors Inc", category: "Entrees" },
+    { name: "Ribeye Steak", unit: "orders", basePrice: 1400, supplier: "Premium Meat Co", category: "Entrees" },
+    { name: "Fried Chicken Sandwich", unit: "orders", basePrice: 1400, supplier: "Premium Meat Co", category: "Entrees" },
+    { name: "Braised Short Rib", unit: "orders", basePrice: 1400, supplier: "Premium Meat Co", category: "Entrees" },
+    { name: "Penne alla Vodka", unit: "orders", basePrice: 1400, supplier: "Italian Imports Ltd", category: "Entrees" },
+    { name: "Chocolate Lava Cake", unit: "orders", basePrice: 1400, supplier: "Sweet Treats Bakery", category: "Desserts" }
   ];
 
-  const categories = ["Vegetables", "Fruits", "Leafy Greens"];
   const dummyData: InsertSalesData[] = [];
 
   // Generate data for the last 30 days
@@ -23,15 +22,15 @@ export function generateDummySalesData(): InsertSalesData[] {
     const date = new Date(today);
     date.setDate(date.getDate() - dayOffset);
 
-    // Generate 3-8 random sales per day
-    const salesPerDay = Math.floor(Math.random() * 6) + 3;
+    // Generate 5-12 random sales per day (restaurant orders)
+    const salesPerDay = Math.floor(Math.random() * 8) + 5;
 
     for (let i = 0; i < salesPerDay; i++) {
       const item = items[Math.floor(Math.random() * items.length)];
 
-      // Add some randomness to quantities and prices
-      const baseQuantity = Math.floor(Math.random() * 20) + 5; // 5-25 units
-      const priceVariation = 0.8 + Math.random() * 0.4; // ±20% price variation
+      // Add some randomness to quantities (orders per day)
+      const baseQuantity = Math.floor(Math.random() * 35) + 15; // 15-50 orders per item per day
+      const priceVariation = 0.95 + Math.random() * 0.1; // ±5% price variation (menu prices are more stable)
 
       dummyData.push({
         date,
@@ -40,7 +39,7 @@ export function generateDummySalesData(): InsertSalesData[] {
         unit: item.unit,
         priceInCents: Math.round(item.basePrice * priceVariation),
         supplier: item.supplier,
-        category: categories[Math.floor(Math.random() * categories.length)]
+        category: item.category
       });
     }
   }
