@@ -1,0 +1,252 @@
+/* ===========================
+   FORECAST REPORT STYLES
+   =========================== */
+
+/* Layout */
+.container {
+  min-height: 100vh;
+  background-color: hsl(var(--off-white));
+  padding-bottom: 5rem; /* 80px */
+}
+
+.innerContainer {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.pageHeader {
+  padding-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+.pageTitle {
+  font-size: 1.875rem; /* 30px */
+  font-weight: bold;
+  color: hsl(var(--charcoal));
+}
+
+/* Sections */
+.section {
+  margin-bottom: 2rem;
+}
+
+.sectionWithBackground {
+  background-color: hsl(var(--light-grey));
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.sectionTitle {
+  font-size: 1.5rem; /* 24px */
+  font-weight: 600;
+  color: hsl(var(--charcoal));
+  margin-bottom: 1.5rem;
+}
+
+/* Grid Layouts */
+.twoColumnGrid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .twoColumnGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.savingsCardsColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Cards */
+.card {
+  background-color: white;
+  border: none;
+  border-radius: 0.5rem;
+}
+
+.cardWithBackground {
+  background-color: hsl(var(--light-grey));
+  border: none;
+  border-radius: 0.5rem;
+}
+
+.cardHeader {
+  padding: 1rem 1.5rem;
+}
+
+.cardTitle {
+  font-size: 1.125rem; /* 18px */
+  color: hsl(var(--charcoal));
+}
+
+.cardTitleLarge {
+  font-size: 1.5rem; /* 24px */
+  color: hsl(var(--charcoal));
+}
+
+.cardContent {
+  padding: 1.5rem;
+}
+
+/* Savings Card */
+.savingsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.savingsLabel {
+  color: hsl(var(--charcoal));
+}
+
+.savingsValue {
+  font-weight: 600;
+  color: hsl(var(--charcoal));
+}
+
+.savingsTotalRow {
+  border-top: 1px solid hsl(var(--border));
+  padding-top: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.savingsTotalLabel {
+  color: hsl(var(--charcoal));
+  font-weight: 500;
+}
+
+.savingsTotalValue {
+  font-size: 1.875rem; /* 30px */
+  font-weight: bold;
+  color: hsl(var(--growth-green));
+}
+
+/* Cumulative Savings Card */
+.cumulativeSavingsContent {
+  text-align: center;
+}
+
+.cumulativeSavingsLabel {
+  color: hsl(var(--charcoal));
+  margin-bottom: 0.5rem;
+}
+
+.cumulativeSavingsValue {
+  font-size: 2.25rem; /* 36px */
+  font-weight: bold;
+  color: hsl(var(--growth-green));
+}
+
+/* Chart */
+.chartContainer {
+  height: 250px;
+  width: 100%;
+}
+
+.chartContainerLarge {
+  height: 300px;
+  width: 100%;
+}
+
+/* Accuracy Metric */
+.accuracyMetric {
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+.accuracyLabel {
+  font-size: 1.25rem; /* 20px */
+  color: hsl(var(--charcoal));
+  margin-bottom: 0.5rem;
+}
+
+.accuracyValue {
+  font-size: 3rem; /* 48px */
+  font-weight: bold;
+  color: hsl(var(--growth-green));
+}
+
+/* Insight Cards */
+.insightList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.insightItem {
+  color: hsl(var(--charcoal));
+  margin-bottom: 0.5rem;
+  padding-left: 0;
+}
+
+/* Table Controls */
+.tableControls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .tableControls {
+    flex-direction: row;
+  }
+}
+
+.tableControlSelect {
+  background-color: white;
+  color: hsl(var(--charcoal));
+}
+
+/* Table */
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableHead {
+  background-color: white;
+}
+
+.tableHeader {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  color: hsl(var(--charcoal));
+  font-weight: 600;
+}
+
+.tableBody {
+  background-color: white;
+}
+
+.tableRow {
+  border-top: 1px solid hsl(var(--border));
+}
+
+.tableCell {
+  padding: 0.75rem 1rem;
+  color: hsl(var(--charcoal));
+}
+
+.addNoteButton {
+  background-color: white;
+  border-color: hsl(var(--charcoal));
+  color: hsl(var(--charcoal));
+}
+
+.addNoteButton:hover {
+  background-color: hsl(var(--light-grey));
+}
