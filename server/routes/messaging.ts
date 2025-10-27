@@ -74,8 +74,26 @@ export function registerMessagingRoutes(app: Express) {
           return res.status(200).send('OK'); // Still respond OK to Twilio
         }
 
+        const dayDemand = "busy";
+        const predictedSales = "$5,200";
+        const predictedPercentage = "23% higher";
+        const dummyInfo = `📈 We're forecasting a ${dayDemand} day with predicted sales of ~${predictedSales}, *${predictedPercentage}* than normal.\n📦 *Based on this, here are the items you'll likely sell:*`;
+
+        // List of predicted items with units
+        const predictedItems = [
+          { name: "Ribeye Steak", units: 32 },
+          { name: "Fried Calamari", units: 34 },
+          { name: "Crispy Brussels Sprouts", units: 29 }
+        ];
+
+        // Format items into monospace block
+        const itemsText = predictedItems
+          .map(item => `${item.name}: ${item.units} units`)
+          .join('\n');
+        const dummyInfo2 = `\`\`\`${itemsText}\`\`\``;
+
         // Send a free-form follow-up message
-        const dummyMessage = "Thanks for your response! Here's some additional information about your order. We'll process this shortly and get back to you.";
+        const dummyMessage = `${dummyInfo}\n\n${dummyInfo2}`;
 
         // Extract phone number (remove whatsapp: prefix if present)
         const phoneNumber = From.replace('whatsapp:', '');
