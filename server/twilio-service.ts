@@ -1,4 +1,5 @@
 import twilio from 'twilio';
+import { formatDateWithOrdinal, getTomorrow } from './routes/date-utils';
 
 export function createTwilioService() {
   
@@ -41,7 +42,8 @@ export function createTwilioService() {
     try {
       contentSid = process.env.TWILIO_CONTENT_SID;
       const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
-      contentVariables = '{"1":"Alan","2":"01/01"}';
+      const formattedDate = formatDateWithOrdinal(getTomorrow());
+      contentVariables = `{"1":"Alan","2":"${formattedDate}"}`;
       const messageOptions: any = {
         messagingServiceSid,
         contentSid,
