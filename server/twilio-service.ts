@@ -43,7 +43,7 @@ export function createTwilioService() {
       contentSid = process.env.TWILIO_CONTENT_SID;
       const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
       const formattedDate = formatDateWithOrdinal(getTomorrow());
-      contentVariables = `{"1":"Alan","2":"${formattedDate}"}`;
+      contentVariables = `{"1":"Felipe","2":"${formattedDate}"}`;
       const messageOptions: any = {
         messagingServiceSid,
         contentSid,
