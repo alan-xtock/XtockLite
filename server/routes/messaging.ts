@@ -1,11 +1,36 @@
 import type { Express } from "express";
 import { createTwilioService } from "../twilio-service";
+import { storage } from "../storage";
+import type { Forecast } from "@shared/schema";
 import { z } from "zod";
 
 const sendMessageSchema = z.object({
   to: z.string().optional(),
   message: z.string().min(1, "Message is required")
 });
+
+// Helper function to format forecasts into WhatsApp message
+function formatForecastMessage(forecasts: Forecast[]): string {
+  // Calculate summary statistics
+  const totalUnits = forecasts.reduce((sum, f) => sum + f.predictedQuantity, 0);
+  const estimatedSales = totalUnits * 10; // $10 per unit estimate
+  const predictedSales = `$${estimatedSales.toLocaleString()}`;
+
+  // Determine day demand based on total units
+  const dayDemand = totalUnits > 200 ? "busy" : totalUnits > 100 ? "moderate" : "slow";
+  const predictedPercentage = "23% higher"; // TODO: Calculate from historical data
+
+  // Build header
+  const header = `📈 We're forecasting a ${dayDemand} day with predicted sales of ~${predictedSales}, *${predictedPercentage}* than normal.\n📦 *Based on this, here are the items you'll likely sell:*`;
+
+  // Format forecast items
+  const itemsText = forecasts
+    .map(forecast => `${forecast.item}: ${forecast.predictedQuantity} units`)
+    .join('\n');
+  const formattedItems = `\`\`\`${itemsText}\`\`\``;
+
+  return `${header}\n\n${formattedItems}`;
+}
 
 export function registerMessagingRoutes(app: Express) {
   const twilioService = createTwilioService();
@@ -64,55 +89,48 @@ export function registerMessagingRoutes(app: Express) {
     try {
       console.log('Received WhatsApp webhook:', req.body);
 
-      const { From, Body, MessageSid } = req.body;
+      const { From, Body } = req.body;
 
-      if (From && Body) {
-        console.log(`Received message from ${From}: ${Body}`);
-
-        if (!twilioService) {
-          console.error('Twilio service not configured for webhook response');
-          return res.status(200).send('OK'); // Still respond OK to Twilio
-        }
-
-        const dayDemand = "busy";
-        const predictedSales = "$5,200";
-        const predictedPercentage = "23% higher";
-        const dummyInfo = `📈 We're forecasting a ${dayDemand} day with predicted sales of ~${predictedSales}, *${predictedPercentage}* than normal.\n📦 *Based on this, here are the items you'll likely sell:*`;
-
-        // List of predicted items with units
-        const predictedItems = [
-          { name: "Ribeye Steak", units: 32 },
-          { name: "Fried Calamari", units: 34 },
-          { name: "Crispy Brussels Sprouts", units: 29 }
-        ];
-
-        // Format items into monospace block
-        const itemsText = predictedItems
-          .map(item => `${item.name}: ${item.units} units`)
-          .join('\n');
-        const dummyInfo2 = `\`\`\`${itemsText}\`\`\``;
-
-        // Send a free-form follow-up message
-        const dummyMessage = `${dummyInfo}\n\n${dummyInfo2}`;
-
-        // Extract phone number (remove whatsapp: prefix if present)
-        const phoneNumber = From.replace('whatsapp:', '');
-
-        const result = await twilioService.sendFreeFormMessage(phoneNumber, dummyMessage);
-
-        if (result.success) {
-          console.log('Follow-up message sent successfully');
-        } else {
-          console.error('Failed to send follow-up message:', result.error);
-        }
+      // Validate incoming message
+      if (!From || !Body) {
+        console.log('Invalid webhook payload - missing From or Body');
+        return res.status(200).send('OK');
       }
 
-      // Always respond with 200 OK to Twilio
+      console.log(`Received message from ${From}: ${Body}`);
+
+      // Check Twilio service availability
+      if (!twilioService) {
+        console.error('Twilio service not configured for webhook response');
+        return res.status(200).send('OK');
+      }
+
+      // Retrieve latest forecasts from database
+      const forecasts = await storage.getForecasts(10);
+
+      if (forecasts.length === 0) {
+        console.log('No forecasts available to send');
+        return res.status(200).send('OK');
+      }
+
+      // Format the forecast message
+      const forecastMessage = formatForecastMessage(forecasts);
+
+      // Send WhatsApp message with forecast data
+      const phoneNumber = From.replace('whatsapp:', '');
+      const result = await twilioService.sendFreeFormMessage(phoneNumber, forecastMessage);
+
+      if (result.success) {
+        console.log('Follow-up message sent successfully');
+      } else {
+        console.error('Failed to send follow-up message:', result.error);
+      }
+
       res.status(200).send('OK');
 
     } catch (error) {
       console.error('Webhook error:', error);
-      // Still respond OK to prevent Twilio from retrying
+      // Always respond OK to prevent Twilio from retrying
       res.status(200).send('OK');
     }
   });
