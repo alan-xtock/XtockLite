@@ -105,33 +105,43 @@ export function useDashboard() {
     setLoadingProgress(0);
 
     try {
-      // Step 1: Connecting to Toast (1.5s)
+      // Step 1: Connecting to Toast
       setLoadingProgress(1);
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 800));
 
-      // Step 2: Importing sales data (1.5s)
+      // Step 2: Call backend to connect and import data
       setLoadingProgress(2);
-      const dummySalesData = [
-        { item: "Tomatoes", quantity: 15, date: "2024-01-01", unit: "lbs", price: 2.50 },
-        { item: "Lettuce", quantity: 8, date: "2024-01-01", unit: "heads", price: 1.25 },
-        { item: "Onions", quantity: 12, date: "2024-01-01", unit: "lbs", price: 1.80 },
-        { item: "Carrots", quantity: 10, date: "2024-01-01", unit: "lbs", price: 1.50 },
-        { item: "Bell Peppers", quantity: 6, date: "2024-01-01", unit: "lbs", price: 3.00 }
-      ];
+      const response = await fetch('/api/toast/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: toastApiKey })
+      });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to connect to Toast');
+      }
+
+      const result = await response.json();
+      console.log('Toast connection result:', result);
+
+      // Step 3: Update state with real backend response
       setIsToastConnected(true);
       setHasUploadedFile(true);
       setUploadResult({
-        validRows: dummySalesData.length,
-        totalRows: dummySalesData.length,
-        errors: [],
+        validRows: result.validRows,
+        totalRows: result.totalRows,
+        errors: result.errors || [],
         toastDataUsed: true
       });
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 800));
 
-      // Step 3: Complete
+      // Step 4: Complete
       setLoadingProgress(4);
+
+      // Invalidate queries to fetch fresh data from backend
+      queryClient.invalidateQueries({ queryKey: ['/api/sales-data'] });
 
       toast({
         title: "Toast Connected Successfully!",
@@ -143,7 +153,7 @@ export function useDashboard() {
       setLoadingProgress(0);
       toast({
         title: "Connection Failed",
-        description: "Failed to connect to Toast. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to connect to Toast. Please try again.",
         variant: "destructive"
       });
     } finally {
