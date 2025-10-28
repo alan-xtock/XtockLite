@@ -10,7 +10,7 @@ import type {
   PurchaseOrderStatus
 } from "@shared/schema";
 
-// Storage interface for XtockLite
+// Storage interface for Xtock
 export interface IStorage {
   // Sales data operations
   insertSalesData(data: InsertSalesData[]): Promise<SalesData[]>;

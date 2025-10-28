@@ -12,7 +12,7 @@ export default function TestimonialSection({ testimonials }: TestimonialSectionP
   // Default testimonials with emphasized text using <strong> tags
   const defaultTestimonials: Testimonial[] = [
     {
-      quote: "XtockLite helped us predict demand accurately and quickly. We were able to reduce overordering and cut food costs by 62%.",
+      quote: "Xtock helped us predict demand accurately and quickly. We were able to reduce overordering and cut food costs by 62%.",
       name: "Derk",
       role: "Head Chef"
     },
@@ -22,7 +22,7 @@ export default function TestimonialSection({ testimonials }: TestimonialSectionP
       role: "Restaurant Manager"
     },
     {
-      quote: "We've been using XtockLite for three months, and it's transformed our ordering process. We reduced our food waste by 35% and saved thousands.",
+      quote: "We've been using Xtock for three months, and it's transformed our ordering process. We reduced our food waste by 35% and saved thousands.",
       name: "Michael",
       role: "Operations Director"
     },

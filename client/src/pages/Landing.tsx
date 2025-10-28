@@ -20,7 +20,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
               <span className="text-growth-green">More Peace of Mind.</span>
             </h1>
             <p className="text-xl text-charcoal/70 leading-relaxed">
-              XtockLite predicts tomorrow's inventory needs and sends a ready-to-approve
+              Xtock predicts tomorrow's inventory needs and sends a ready-to-approve
               purchase order every morning via WhatsApp.
             </p>
             <Button
@@ -143,16 +143,16 @@ export default function Landing({ onGetStarted }: LandingProps) {
         </div>
       </section>
 
-      {/* Why XtockLite Section */}
+      {/* Why Xtock Section */}
       <section className="bg-mint-accent px-4 py-16">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-8 items-center">
             <div className="space-y-6">
               <h2 className="text-3xl lg:text-4xl font-bold text-charcoal">
-                Why XtockLite
+                Why Xtock
               </h2>
               <p className="text-lg text-charcoal/80 leading-relaxed">
-                XtockLite was designed by foodservice operators with 20+ years of experience
+                Xtock was designed by foodservice operators with 20+ years of experience
                 running a $9M produce distribution business.
               </p>
               <div className="flex items-center gap-4">
@@ -209,7 +209,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
             Simplify daily ordering. Protect your margins.
           </h2>
           <p className="text-xl text-white/90">
-            Join the pilot program and start using XtockLite.
+            Join the pilot program and start using Xtock.
           </p>
           <Button
             onClick={onGetStarted}

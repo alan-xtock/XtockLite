@@ -1,8 +1,8 @@
-# XtockLite - AI Produce Ordering System
+# Xtock - AI Produce Ordering System
 
 ## Overview
 
-XtockLite is a mobile-first web application that uses AI to optimize produce purchasing decisions for businesses. The system analyzes sales data to generate forecasts and automate purchase order creation, aiming to reduce daily produce costs by 10%. Key features include CSV data upload, AI-powered demand forecasting, automated purchase order generation, and WhatsApp integration for order delivery to suppliers.
+Xtock is a mobile-first web application that uses AI to optimize produce purchasing decisions for businesses. The system analyzes sales data to generate forecasts and automate purchase order creation, aiming to reduce daily produce costs by 10%. Key features include CSV data upload, AI-powered demand forecasting, automated purchase order generation, and WhatsApp integration for order delivery to suppliers.
 
 ## User Preferences
 

@@ -1,4 +1,4 @@
-# XtockLite Mobile App Design Guidelines
+# Xtock Mobile App Design Guidelines
 
 ## Design Approach
 **Selected Approach:** Reference-Based (Productivity Apps)

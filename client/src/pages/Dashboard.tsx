@@ -50,7 +50,7 @@ export default function Dashboard() {
                 No Data Source Connected
               </h2>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Go to the Connect tab to upload a CSV file or connect to Toast POS to start using XtockLite.
+                Go to the Connect tab to upload a CSV file or connect to Toast POS to start using Xtock.
               </p>
             </div>
           </div>
