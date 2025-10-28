@@ -6,6 +6,7 @@ interface ForecastSectionProps {
   forecastsLoading: boolean;
   selectedWeather: "sunny" | "cloudy" | "rainy";
   onGenerateOrder: () => void;
+  firstForecastLoad?: boolean;
 }
 
 export default function ForecastSection({
@@ -13,7 +14,8 @@ export default function ForecastSection({
   forecasts,
   forecastsLoading,
   selectedWeather,
-  onGenerateOrder
+  onGenerateOrder,
+  firstForecastLoad = false
 }: ForecastSectionProps) {
   if (!showForecast) {
     return null;
@@ -38,7 +40,7 @@ export default function ForecastSection({
               predictedQuantity: item.predictedQuantity
             }))}
             weather={weather}
-            onGenerateOrder={onGenerateOrder}
+            firstLoad={firstForecastLoad}
           />
         ) : (
           <div className="text-center py-4 text-muted-foreground">

@@ -15,6 +15,7 @@ export function useDashboard() {
   const [isConnectingToast, setIsConnectingToast] = useState(false);
   const [isToastConnected, setIsToastConnected] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0); // 0 = not started, 1 = connecting, 2 = importing data, 3 = generating forecasts, 4 = complete
+  const [firstForecastLoad, setFirstForecastLoad] = useState(true); // Track if this is the first forecast generation
   const { toast } = useToast();
 
   // Fetch real sales data
@@ -45,6 +46,7 @@ export function useDashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/forecasts'] });
       setShowForecast(true);
       setIsGeneratingForecast(false);
+      setFirstForecastLoad(false); // Disable progressive animation for subsequent views
       toast({ title: "Forecasts generated successfully" });
     },
     onError: (error: any) => {
@@ -67,7 +69,10 @@ export function useDashboard() {
     console.log('Upload completed:', result);
     setUploadResult(result);
     setHasUploadedFile(true);
-    setIsGeneratingForecast(false); // Ensure button is visible after upload
+    setIsGeneratingForecast(false);
+    setShowForecast(false); // Reset forecast display
+    setFirstForecastLoad(true); // Reset to show progressive loading on next forecast
+    setLoadingProgress(4); // Set to complete state for new upload
 
     // Don't auto-generate forecasts - let user click the button instead
     // This prevents getting stuck in generating state
@@ -123,38 +128,15 @@ export function useDashboard() {
         toastDataUsed: true
       });
 
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Step 3: Generating forecasts (2s)
-      setLoadingProgress(3);
-      console.log('Simulating Toast connection with dummy data:', dummySalesData);
+      // Step 3: Complete
+      setLoadingProgress(4);
 
-      const response = await fetch('/api/forecasts/generate-1day', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ weather: selectedWeather })
+      toast({
+        title: "Toast Connected Successfully!",
+        description: "Your sales data has been imported. Ready to generate forecasts."
       });
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Forecast generated successfully:', result);
-
-        // Automatically show forecasts
-        queryClient.invalidateQueries({ queryKey: ['/api/forecasts'] });
-        setShowForecast(true);
-
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Step 4: Complete
-        setLoadingProgress(4);
-
-        toast({
-          title: "Toast Connected Successfully!",
-          description: "Your sales data has been imported and forecasts generated."
-        });
-      } else {
-        throw new Error('Failed to generate forecasts');
-      }
 
     } catch (error) {
       console.error('Error connecting to Toast:', error);
@@ -182,6 +164,7 @@ export function useDashboard() {
     isConnectingToast,
     isToastConnected,
     loadingProgress,
+    firstForecastLoad,
     salesData,
     forecasts,
     forecastsLoading,

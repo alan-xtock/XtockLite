@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,17 +15,44 @@ interface ForecastCardProps {
   date: string;
   items: ForecastItem[];
   weather?: string;
+  firstLoad?: boolean;
 }
 
 export default function ForecastCard({
   date,
   items,
-  weather = "cloudy"
+  weather = "cloudy",
+  firstLoad = false
 }: ForecastCardProps) {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [visibleItems, setVisibleItems] = useState(0);
   const { sendMessage } = useMessaging();
   const { toast } = useToast();
+
+  // Progressive item reveal - only on first load
+  useEffect(() => {
+    if (items.length > 0) {
+      if (firstLoad) {
+        // Animate progressively on first load
+        setVisibleItems(0);
+        const timer = setInterval(() => {
+          setVisibleItems(prev => {
+            if (prev >= items.length) {
+              clearInterval(timer);
+              return items.length;
+            }
+            return prev + 1;
+          });
+        }, 200); // Show one item every 200ms
+
+        return () => clearInterval(timer);
+      } else {
+        // Show all items immediately on subsequent views
+        setVisibleItems(items.length);
+      }
+    }
+  }, [items.length, firstLoad]);
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
@@ -48,8 +75,11 @@ export default function ForecastCard({
         </div>
 
         <div className="space-y-2">
-          {items.map((item, index) => (
-            <div key={index} className="flex items-center justify-between py-2 px-3 border rounded-lg">
+          {items.slice(0, visibleItems).map((item, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between py-2 px-3 border rounded-lg animate-fade-in"
+            >
               <div className="font-medium text-foreground">{item.item}</div>
               <span className="text-base font-bold text-primary">
                 {item.predictedQuantity} units

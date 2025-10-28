@@ -17,6 +17,7 @@ export default function Dashboard() {
     selectedWeather,
     isToastConnected,
     loadingProgress,
+    firstForecastLoad,
     salesData,
     forecasts,
     forecastsLoading,
@@ -108,8 +109,27 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Forecast Section - Show after forecasts are generated (step 3+) */}
-        {loadingProgress >= 3 && (
+        {/* Generate Forecast Button - Show after data is loaded */}
+        {loadingProgress >= 4 && !showForecast && !isGeneratingForecast && (
+          <div className="text-center py-8 space-y-4 animate-fade-in">
+            <h2 className="text-2xl font-bold text-foreground">
+              Ready to Generate Forecasts
+            </h2>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Your data is loaded. Click below to generate AI-powered demand forecasts for tomorrow.
+            </p>
+            <Button
+              onClick={handleGenerateForecast}
+              size="lg"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-4"
+            >
+              Generate Forecast
+            </Button>
+          </div>
+        )}
+
+        {/* Forecast Section - Show after user clicks generate */}
+        {showForecast && (
           <div className="animate-fade-in">
             <ForecastSection
               showForecast={showForecast}
@@ -117,6 +137,7 @@ export default function Dashboard() {
               forecastsLoading={forecastsLoading}
               selectedWeather={selectedWeather}
               onGenerateOrder={handleGenerateOrder}
+              firstForecastLoad={firstForecastLoad}
             />
           </div>
         )}
@@ -150,16 +171,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Weather Selector & Generate Forecast Button */}
-        <WeatherForecastControls
-          selectedWeather={selectedWeather}
-          setSelectedWeather={setSelectedWeather}
-          onGenerateForecast={handleGenerateForecast}
-          showForecast={showForecast}
-          hasUploadedFile={hasUploadedFile}
-          isToastConnected={isToastConnected}
-          isGeneratingForecast={isGeneratingForecast}
-        />
+        {/* Hide WeatherForecastControls - using prominent Generate Forecast button instead */}
       </div>
     </div>
   );
