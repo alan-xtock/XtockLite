@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Home, ShoppingCart, TrendingUp, Settings, FileBarChart } from "lucide-react";
+import { Home, ShoppingCart, TrendingUp, Settings, FileBarChart, Link } from "lucide-react";
 
 interface NavigationTabsProps {
   activeTab?: string;
@@ -8,6 +8,7 @@ interface NavigationTabsProps {
 }
 
 const tabs = [
+  { id: "connect", label: "Connect", icon: Link },
   { id: "dashboard", label: "Dashboard", icon: Home },
   { id: "orders", label: "Orders", icon: ShoppingCart },
   { id: "analytics", label: "Analytics", icon: TrendingUp },
@@ -15,11 +16,16 @@ const tabs = [
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
-export default function NavigationTabs({ 
-  activeTab = "dashboard", 
-  onTabChange 
+export default function NavigationTabs({
+  activeTab = "dashboard",
+  onTabChange
 }: NavigationTabsProps) {
   const [currentTab, setCurrentTab] = useState(activeTab);
+
+  // Sync internal state with prop changes
+  useEffect(() => {
+    setCurrentTab(activeTab);
+  }, [activeTab]);
 
   const handleTabClick = (tabId: string) => {
     console.log('Tab clicked:', tabId);

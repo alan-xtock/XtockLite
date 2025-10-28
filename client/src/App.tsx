@@ -6,8 +6,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun } from "lucide-react";
+import { DashboardProvider } from "@/contexts/DashboardContext";
 import NavigationTabs from "@/components/NavigationTabs";
 import Landing from "@/pages/Landing";
+import Connect from "@/pages/Connect";
 import Dashboard from "@/pages/Dashboard";
 import Orders from "@/pages/Orders";
 import Analytics from "@/pages/Analytics";
@@ -45,15 +47,21 @@ function ThemeToggle() {
 }
 
 function MainApp() {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("connect");
   const [, setLocation] = useLocation();
 
   const handleReturnHome = () => {
     setLocation("/");
   };
 
+  const handleConnected = () => {
+    setActiveTab("dashboard");
+  };
+
   const renderPage = () => {
     switch (activeTab) {
+      case "connect":
+        return <Connect onConnected={handleConnected} />;
       case "dashboard":
         return <Dashboard />;
       case "orders":
@@ -65,30 +73,32 @@ function MainApp() {
       case "settings":
         return <Settings />;
       default:
-        return <Dashboard />;
+        return <Connect onConnected={handleConnected} />;
     }
   };
 
   return (
-    <div className="relative">
-      {/* Header with Home Button */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex justify-between items-center">
-        <h1 className="text-lg font-semibold text-gray-900">XtockLite</h1>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={handleReturnHome}
-          data-testid="button-return-home"
-        >
-          Home
-        </Button>
-      </header>
-      {renderPage()}
-      <NavigationTabs 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab} 
-      />
-    </div>
+    <DashboardProvider>
+      <div className="relative">
+        {/* Header with Home Button */}
+        <header className="bg-white border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+          <h1 className="text-lg font-semibold text-gray-900">XtockLite</h1>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleReturnHome}
+            data-testid="button-return-home"
+          >
+            Home
+          </Button>
+        </header>
+        {renderPage()}
+        <NavigationTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+      </div>
+    </DashboardProvider>
   );
 }
 

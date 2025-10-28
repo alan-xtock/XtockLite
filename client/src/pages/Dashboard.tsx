@@ -1,11 +1,10 @@
 import OrderCard from "@/components/OrderCard";
-import DataSourceTabs from "@/components/DataSourceTabs";
 import { DashboardOverview, DataImportSummary } from "@/components/DashboardStats";
 import WeatherForecastControls from "@/components/WeatherForecastControls";
 import ForecastSection from "@/components/ForecastSection";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
-import { useDashboard } from "@/hooks/useDashboard";
+import { useDashboardContext } from "@/contexts/DashboardContext";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
@@ -16,22 +15,14 @@ export default function Dashboard() {
     uploadResult,
     isGeneratingForecast,
     selectedWeather,
-    activeTab,
-    toastApiKey,
-    isConnectingToast,
     isToastConnected,
     salesData,
     forecasts,
     forecastsLoading,
     setSelectedWeather,
-    setActiveTab,
-    setToastApiKey,
-    handleUploadStart,
-    handleFileUpload,
     handleGenerateForecast,
-    handleGenerateOrder,
-    handleConnectToast
-  } = useDashboard();
+    handleGenerateOrder
+  } = useDashboardContext();
 
   const { toast } = useToast();
 
@@ -60,32 +51,18 @@ export default function Dashboard() {
           uploadResult={uploadResult}
         />
 
-        {/* Welcome Section */}
+        {/* No Data Connected Message */}
         {!hasUploadedFile && !isToastConnected && (
-          <div className="text-center py-8 space-y-6">
+          <div className="text-center py-12 space-y-6">
             <div className="space-y-3">
               <h2 className="text-2xl font-bold text-foreground">
-                Welcome to XtockLite
+                No Data Source Connected
               </h2>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Connect your data source to start reducing produce costs with AI-powered forecasting.
+                Go to the Connect tab to upload a CSV file or connect to Toast POS to start using XtockLite.
               </p>
             </div>
           </div>
-        )}
-
-        {/* Data Source Selection Tabs */}
-        {!hasUploadedFile && !isToastConnected && (
-          <DataSourceTabs
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            toastApiKey={toastApiKey}
-            setToastApiKey={setToastApiKey}
-            isConnectingToast={isConnectingToast}
-            onFileUpload={handleFileUpload}
-            onUploadStart={handleUploadStart}
-            onConnectToast={handleConnectToast}
-          />
         )}
 
         {/* Processing Status */}
