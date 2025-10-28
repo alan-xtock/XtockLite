@@ -43,6 +43,17 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <div className="p-4 space-y-6">
+        {/* Toast Connection Success Banner */}
+        {uploadResult?.toastDataUsed && isToastConnected && (
+          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center text-green-800">
+              <div className="text-sm font-medium">
+                ✅ Toast POS: Successfully connected and imported sales data
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Stats Overview */}
         <DashboardOverview
           salesData={salesData}
