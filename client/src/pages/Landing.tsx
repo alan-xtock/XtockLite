@@ -161,9 +161,23 @@ export default function Landing({ onGetStarted }: LandingProps) {
               </div>
             </div>
             <div className="bg-white rounded-lg p-6 shadow-sm border border-charcoal/10">
-              <div className="text-center space-y-4">
-                <div className="w-20 h-20 bg-light-grey rounded-full mx-auto"></div>
-                <div className="text-charcoal/60 text-sm">Founder testimonial placeholder</div>
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-growth-green to-mint-accent rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-2xl font-bold">FG</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-charcoal">Felipe Gómez</div>
+                    <div className="text-sm text-charcoal/60">Founder & CEO</div>
+                  </div>
+                </div>
+                <p className="text-charcoal/80 italic leading-relaxed">
+                  "After two decades in produce distribution, I've seen firsthand how poor inventory
+                  planning destroys restaurant margins. Food waste isn't just an environmental issue—it's
+                  money thrown away every single day. We built Xtock to give operators the same
+                  data-driven forecasting tools that big chains use, but simple enough to fit into
+                  your morning routine."
+                </p>
               </div>
             </div>
           </div>
