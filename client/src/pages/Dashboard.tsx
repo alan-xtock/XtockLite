@@ -1,9 +1,7 @@
 import OrderCard from "@/components/OrderCard";
-import { DashboardOverview, DataImportSummary } from "@/components/DashboardStats";
+import { DataImportSummary } from "@/components/DashboardStats";
 import WeatherForecastControls from "@/components/WeatherForecastControls";
 import ForecastSection from "@/components/ForecastSection";
-import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
 import { useDashboardContext } from "@/contexts/DashboardContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -30,19 +28,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background border-b border-border p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-primary" data-testid="text-app-title">XtockLite</h1>
-            <p className="text-sm text-muted-foreground">AI Produce Ordering</p>
-          </div>
-          <Button variant="outline" size="icon" data-testid="button-refresh">
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="p-4 space-y-6">
         {/* Toast Connection Success Banner */}
@@ -56,18 +41,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Stats Overview - Show after data is imported (step 2+) */}
-        {loadingProgress >= 2 && (
-          <div className="animate-fade-in">
-            <DashboardOverview
-              salesData={salesData}
-              hasUploadedFile={hasUploadedFile}
-              isToastConnected={isToastConnected}
-              uploadResult={uploadResult}
-              loadingProgress={loadingProgress}
-            />
-          </div>
-        )}
 
         {/* No Data Connected Message */}
         {!hasUploadedFile && !isToastConnected && (

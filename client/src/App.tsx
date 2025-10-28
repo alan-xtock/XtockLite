@@ -82,7 +82,10 @@ function MainApp() {
       <div className="relative">
         {/* Header with Home Button */}
         <header className="bg-white border-b border-gray-200 px-4 py-3 flex justify-between items-center">
-          <h1 className="text-lg font-semibold text-gray-900">XtockLite</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-primary">XtockLite</h1>
+            <p className="text-sm text-muted-foreground">AI Produce Ordering</p>
+          </div>
           <Button
             variant="outline"
             size="sm"
