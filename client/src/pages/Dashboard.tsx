@@ -4,6 +4,7 @@ import WeatherForecastControls from "@/components/WeatherForecastControls";
 import ForecastSection from "@/components/ForecastSection";
 import { useDashboardContext } from "@/contexts/DashboardContext";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
   const {
