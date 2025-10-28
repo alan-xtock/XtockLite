@@ -14,6 +14,7 @@ export function useDashboard() {
   const [toastApiKey, setToastApiKey] = useState("");
   const [isConnectingToast, setIsConnectingToast] = useState(false);
   const [isToastConnected, setIsToastConnected] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0); // 0 = not started, 1 = connecting, 2 = importing data, 3 = generating forecasts, 4 = complete
   const { toast } = useToast();
 
   // Fetch real sales data
@@ -96,12 +97,15 @@ export function useDashboard() {
     }
 
     setIsConnectingToast(true);
+    setLoadingProgress(0);
 
     try {
-      // Simulate connection to Toast and call prediction endpoint with dummy data
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call delay
+      // Step 1: Connecting to Toast (1.5s)
+      setLoadingProgress(1);
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
-      // Generate dummy sales data and call forecast endpoint
+      // Step 2: Importing sales data (1.5s)
+      setLoadingProgress(2);
       const dummySalesData = [
         { item: "Tomatoes", quantity: 15, date: "2024-01-01", unit: "lbs", price: 2.50 },
         { item: "Lettuce", quantity: 8, date: "2024-01-01", unit: "heads", price: 1.25 },
@@ -110,10 +114,21 @@ export function useDashboard() {
         { item: "Bell Peppers", quantity: 6, date: "2024-01-01", unit: "lbs", price: 3.00 }
       ];
 
-      // Simulate storing dummy data (you could make an actual API call here)
+      setIsToastConnected(true);
+      setHasUploadedFile(true);
+      setUploadResult({
+        validRows: dummySalesData.length,
+        totalRows: dummySalesData.length,
+        errors: [],
+        toastDataUsed: true
+      });
+
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Step 3: Generating forecasts (2s)
+      setLoadingProgress(3);
       console.log('Simulating Toast connection with dummy data:', dummySalesData);
 
-      // Call the actual prediction endpoint
       const response = await fetch('/api/forecasts/generate-1day', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -124,18 +139,14 @@ export function useDashboard() {
         const result = await response.json();
         console.log('Forecast generated successfully:', result);
 
-        setIsToastConnected(true);
-        setHasUploadedFile(true); // Enable the rest of the flow
-        setUploadResult({
-          validRows: dummySalesData.length,
-          totalRows: dummySalesData.length,
-          errors: [],
-          toastDataUsed: true
-        });
-
         // Automatically show forecasts
         queryClient.invalidateQueries({ queryKey: ['/api/forecasts'] });
         setShowForecast(true);
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Step 4: Complete
+        setLoadingProgress(4);
 
         toast({
           title: "Toast Connected Successfully!",
@@ -147,6 +158,7 @@ export function useDashboard() {
 
     } catch (error) {
       console.error('Error connecting to Toast:', error);
+      setLoadingProgress(0);
       toast({
         title: "Connection Failed",
         description: "Failed to connect to Toast. Please try again.",
@@ -169,6 +181,7 @@ export function useDashboard() {
     toastApiKey,
     isConnectingToast,
     isToastConnected,
+    loadingProgress,
     salesData,
     forecasts,
     forecastsLoading,

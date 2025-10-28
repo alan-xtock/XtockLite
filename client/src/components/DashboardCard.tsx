@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, DollarSign } from "lucide-react";
+import { ReactNode } from "react";
 
 interface DashboardCardProps {
   title: string;
-  value: string;
+  value: string | ReactNode;
   subtitle?: string;
   trend?: number;
   variant?: "default" | "accent";

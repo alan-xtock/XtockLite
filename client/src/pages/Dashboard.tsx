@@ -16,6 +16,7 @@ export default function Dashboard() {
     isGeneratingForecast,
     selectedWeather,
     isToastConnected,
+    loadingProgress,
     salesData,
     forecasts,
     forecastsLoading,
@@ -44,8 +45,8 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="p-4 space-y-6">
         {/* Toast Connection Success Banner */}
-        {uploadResult?.toastDataUsed && isToastConnected && (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+        {uploadResult?.toastDataUsed && isToastConnected && loadingProgress === 4 && (
+          <div className="p-3 bg-green-50 border border-green-200 rounded-lg animate-fade-in">
             <div className="flex items-center text-green-800">
               <div className="text-sm font-medium">
                 ✅ Toast POS: Successfully connected and imported sales data
@@ -54,13 +55,18 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Stats Overview */}
-        <DashboardOverview
-          salesData={salesData}
-          hasUploadedFile={hasUploadedFile}
-          isToastConnected={isToastConnected}
-          uploadResult={uploadResult}
-        />
+        {/* Stats Overview - Show after data is imported (step 2+) */}
+        {loadingProgress >= 2 && (
+          <div className="animate-fade-in">
+            <DashboardOverview
+              salesData={salesData}
+              hasUploadedFile={hasUploadedFile}
+              isToastConnected={isToastConnected}
+              uploadResult={uploadResult}
+              loadingProgress={loadingProgress}
+            />
+          </div>
+        )}
 
         {/* No Data Connected Message */}
         {!hasUploadedFile && !isToastConnected && (
@@ -89,22 +95,31 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Data Import Summary */}
-        <DataImportSummary
-          uploadResult={uploadResult}
-          hasUploadedFile={hasUploadedFile}
-          isToastConnected={isToastConnected}
-          salesData={salesData}
-        />
+        {/* Data Import Summary - Show after data is imported (step 2+) */}
+        {loadingProgress >= 2 && (
+          <div className="animate-fade-in">
+            <DataImportSummary
+              uploadResult={uploadResult}
+              hasUploadedFile={hasUploadedFile}
+              isToastConnected={isToastConnected}
+              salesData={salesData}
+              loadingProgress={loadingProgress}
+            />
+          </div>
+        )}
 
-        {/* Forecast Section */}
-        <ForecastSection
-          showForecast={showForecast}
-          forecasts={forecasts}
-          forecastsLoading={forecastsLoading}
-          selectedWeather={selectedWeather}
-          onGenerateOrder={handleGenerateOrder}
-        />
+        {/* Forecast Section - Show after forecasts are generated (step 3+) */}
+        {loadingProgress >= 3 && (
+          <div className="animate-fade-in">
+            <ForecastSection
+              showForecast={showForecast}
+              forecasts={forecasts}
+              forecastsLoading={forecastsLoading}
+              selectedWeather={selectedWeather}
+              onGenerateOrder={handleGenerateOrder}
+            />
+          </div>
+        )}
 
         {/* Order Section */}
         {showOrder && (forecasts as any)?.forecasts && Array.isArray((forecasts as any).forecasts) && (
