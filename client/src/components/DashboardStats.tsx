@@ -56,7 +56,7 @@ export function DataImportSummary({ uploadResult, hasUploadedFile, isToastConnec
           variant="accent"
         />
       </div>
-      {uploadResult.dummyDataUsed && (
+      {/* {uploadResult.dummyDataUsed && (
         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-center text-blue-800">
             <div className="text-sm font-medium">
@@ -64,7 +64,7 @@ export function DataImportSummary({ uploadResult, hasUploadedFile, isToastConnec
             </div>
           </div>
         </div>
-      )}
+      )} */}
       {uploadResult.toastDataUsed && (
         <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-center text-green-800">

@@ -188,21 +188,6 @@ export default function Landing({ onGetStarted }: LandingProps) {
         </Button>
       </section>
 
-      {/* Proof & Trust Section */}
-      <section className="bg-light-grey px-4 py-16">
-        <div className="max-w-7xl mx-auto text-center">
-          <p className="text-lg font-semibold text-charcoal mb-8">
-            Backed by operators who understand your business
-          </p>
-          <div className="grid md:grid-cols-3 gap-8 opacity-60">
-            <div className="h-12 bg-charcoal/20 rounded"></div>
-            <div className="h-12 bg-charcoal/20 rounded"></div>
-            <div className="h-12 bg-charcoal/20 rounded"></div>
-          </div>
-          <p className="text-sm text-charcoal/60 mt-6">Partner logo placeholders</p>
-        </div>
-      </section>
-
       {/* Final CTA Section */}
       <section className="bg-growth-green px-4 py-16">
         <div className="max-w-4xl mx-auto text-center text-white space-y-6">
