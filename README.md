@@ -1,6 +1,6 @@
 # Xtock
 
-AI-powered demand forecasting and purchase order management for restaurants.
+Demand forecasting for restaurants, delivered over Whatsapp.
 
 ## Overview
 
