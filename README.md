@@ -118,11 +118,74 @@ XtockLite/
 └── migrations/             # Database migration files
 ```
 
+## CSV Data Format
+
+To upload sales data via CSV, your file must include the following columns. The system is flexible with column names and will automatically detect common variations.
+
+### Required Columns
+
+1. **Date** - Sale date/timestamp
+   - Acceptable headers: `date`, `timestamp`, or any header containing these words
+   - Format: Any valid date format (e.g., `2025-01-15`, `01/15/2025`, `2025-01-15T10:30:00`)
+
+2. **Item** - Product/item name
+   - Acceptable headers: `item`, `product`, `category`, `name`, or anything ending in `name`
+   - Format: Any non-empty string
+
+3. **Quantity** - Number of items sold
+   - Acceptable headers: `quantity`, `qty`, or any header containing these words
+   - Format: Positive integer (currency symbols, commas, and spaces are automatically stripped)
+
+### Optional Columns
+
+4. **Unit** (defaults to "units" if not provided)
+   - Acceptable headers: `unit`, `uom`, or any header containing these words
+   - Examples: `lbs`, `kg`, `boxes`, `cases`, `each`
+
+5. **Price** (defaults to $1.00 if not provided)
+   - Acceptable headers: `price`, `cost`, `amount`
+   - Format: Numeric value (currency symbols and commas automatically stripped)
+
+6. **Supplier** (optional)
+   - Acceptable headers: `supplier`, `vendor`
+   - Format: String
+
+7. **Category** (optional)
+   - Acceptable headers: `category`, `type`
+   - Format: String
+
+### Example CSV
+
+```csv
+date,item,quantity,unit,price,supplier,category
+2025-01-15,Tomatoes,50,lbs,2.50,Fresh Farm Co,Vegetables
+2025-01-15,Lettuce,30,heads,1.75,Fresh Farm Co,Vegetables
+2025-01-16,Chicken Breast,100,lbs,4.50,Poultry Plus,Meat
+2025-01-16,Salmon Fillet,25,lbs,8.99,Ocean Fresh,Seafood
+```
+
+### File Requirements
+
+- **File size limit**: 10MB maximum
+- **File type**: `.csv` files only
+- **Encoding**: UTF-8 recommended
+- Empty rows are automatically skipped
+- Headers are case-insensitive and whitespace is trimmed
+
+### Validation
+
+The system performs automatic validation and will:
+- Strip currency symbols ($, £, €, ¥) and commas from numeric values
+- Convert prices to cents for storage (e.g., $12.50 → 1250 cents)
+- Verify quantity is a positive whole number
+- Ensure dates are valid and parsable
+- Provide detailed error messages for invalid rows with row numbers
+
 ## Core Features
 
 ### Data Import
 
-- **CSV Upload**: Drag-and-drop interface for historical sales data
+- **CSV Upload**: Drag-and-drop interface for historical sales data with flexible column detection
 - **Toast POS Integration**: Direct connection to Toast point-of-sale system
 - **Data Validation**: Real-time validation with detailed error reporting
 
