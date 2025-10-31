@@ -191,10 +191,21 @@ The system performs automatic validation and will:
 
 ### Demand Forecasting
 
-- Predicts next-day demand for each item using historical data (last 30 days)
-- Weather-based adjustments (sunny/cloudy/rainy conditions)
-- Confidence metrics and savings calculations
-- Requires minimum 3 days of data for accuracy
+Xtock uses a statistical forecasting model to predict next-day demand for each item. The algorithm works by:
+
+1. **Analyzing Historical Data**: Reviews up to 30 days of sales history per item
+2. **Weighted Calculations**: Recent sales data receives higher weight than older data (linear weighting)
+3. **Weather Adjustments**: Applies multipliers based on tomorrow's weather:
+   - Sunny: +20% increase
+   - Cloudy: No adjustment (baseline)
+   - Rainy: -20% decrease
+4. **Daily Aggregation**: Combines multiple sales entries per day into single daily totals
+
+**Requirements**:
+- Minimum 3 days of historical data per item
+- At least one sales record to generate predictions
+
+**Output**: Predicted quantity needed for tomorrow with 75% confidence level
 
 ### Purchase Order Management
 
