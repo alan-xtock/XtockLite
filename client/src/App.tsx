@@ -84,7 +84,7 @@ function MainApp() {
         <header className="bg-white border-b border-gray-200 px-4 py-3 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-primary">Xtock</h1>
-            <p className="text-sm text-muted-foreground">AI Produce Ordering</p>
+            <p className="text-sm text-muted-foreground">AI Inventory Automation for Restaurants</p>
           </div>
           <Button
             variant="outline"

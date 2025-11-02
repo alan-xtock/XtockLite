@@ -1,4 +1,4 @@
-# Xtock - AI Produce Ordering System
+# Xtock - AI Inventory Automation for Restaurants System
 
 ## Overview
 
