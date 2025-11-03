@@ -115,4 +115,38 @@ export function registerToastRoutes(app: Express) {
       });
     }
   });
+
+  app.get('/api/toast/orders', async (req, res) => {
+    try {
+      if (!toastApi) {
+        return res.status(500).json({
+          error: 'Toast API service not configured'
+        });
+      }
+
+      const { restaurantGuid, startDate, endDate } = req.query;
+      if (!restaurantGuid) {
+        return res.status(400).json({
+          error: 'restaurantGuid parameter is required'
+        });
+      }
+
+      // Build query parameters for date range if provided
+      const queryParams = new URLSearchParams();
+      if (startDate) queryParams.append('startDate', startDate as string);
+      if (endDate) queryParams.append('endDate', endDate as string);
+
+      const queryString = queryParams.toString();
+      const endpoint = `/orders/v2/restaurants/${restaurantGuid}/orders${queryString ? `?${queryString}` : ''}`;
+
+      const orders = await toastApi.makeApiCall(endpoint);
+      res.json(orders);
+    } catch (error) {
+      console.error('Toast orders API error:', error);
+      res.status(500).json({
+        error: 'Failed to fetch orders',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
 }
